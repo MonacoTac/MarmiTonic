@@ -17,11 +17,11 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(cocktails.router, prefix="/cocktails", tags=["cocktails"])
-app.include_router(ingredients.router, prefix="/ingredients", tags=["ingredients"])
-app.include_router(sparql.router, prefix="/sparql", tags=["sparql"])
-app.include_router(planner.router, prefix="/planner", tags=["planner"])
-app.include_router(insights.router, prefix="/insights", tags=["insights"])
+app.include_router(cocktails, prefix="/cocktails", tags=["cocktails"])
+app.include_router(ingredients, prefix="/ingredients", tags=["ingredients"])
+app.include_router(sparql, prefix="/sparql", tags=["sparql"])
+app.include_router(planner, prefix="/planner", tags=["planner"])
+app.include_router(insights, prefix="/insights", tags=["insights"])
 
 @app.get("/")
 def read_root():
