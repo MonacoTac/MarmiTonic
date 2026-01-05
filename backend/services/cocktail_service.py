@@ -10,6 +10,7 @@ import re
 
 # Define namespaces
 DBO = rdflib.Namespace("http://dbpedia.org/ontology/")
+DBP = rdflib.Namespace("http://dbpedia.org/property/")
 DCT = rdflib.Namespace("http://purl.org/dc/terms/")
 
 
@@ -53,11 +54,11 @@ class CocktailService:
 
         # Get other properties
         image = self._get_property(cocktail_uri, DBO.depiction)
-        ingredients = self._get_property(cocktail_uri, DBO.ingredients, "en")
-        preparation = self._get_property(cocktail_uri, DBO.prep, "en")
-        served = self._get_property(cocktail_uri, DBO.served, "en")
-        garnish = self._get_property(cocktail_uri, DBO.garnish, "en")
-        source_link = self._get_property(cocktail_uri, DBO.sourcelink, "en")
+        ingredients = self._get_property(cocktail_uri, DBP.ingredients, "en")
+        preparation = self._get_property(cocktail_uri, DBP.prep, "en")
+        served = self._get_property(cocktail_uri, DBP.served, "en")
+        garnish = self._get_property(cocktail_uri, DBP.garnish, "en")
+        source_link = self._get_property(cocktail_uri, DBP.sourcelink, "en")
 
         # Get categories
         categories = []
@@ -115,11 +116,11 @@ class CocktailService:
             ?cocktail rdfs:label ?name .
             FILTER(LANG(?name) = "en")
             OPTIONAL { ?cocktail dbo:description ?desc . FILTER(LANG(?desc) = "en") }
-            OPTIONAL { ?cocktail dbo:ingredients ?ingredients . FILTER(LANG(?ingredients) = "en") }
-            OPTIONAL { ?cocktail dbo:prep ?prep . FILTER(LANG(?prep) = "en") }
-            OPTIONAL { ?cocktail dbo:served ?served . FILTER(LANG(?served) = "en") }
-            OPTIONAL { ?cocktail dbo:garnish ?garnish . FILTER(LANG(?garnish) = "en") }
-            OPTIONAL { ?cocktail dbo:sourcelink ?source . FILTER(LANG(?source) = "en") }
+            OPTIONAL { ?cocktail dbp:ingredients ?ingredients . FILTER(LANG(?ingredients) = "en") }
+            OPTIONAL { ?cocktail dbp:prep ?prep . FILTER(LANG(?prep) = "en") }
+            OPTIONAL { ?cocktail dbp:served ?served . FILTER(LANG(?served) = "en") }
+            OPTIONAL { ?cocktail dbp:garnish ?garnish . FILTER(LANG(?garnish) = "en") }
+            OPTIONAL { ?cocktail dbp:sourcelink ?source . FILTER(LANG(?source) = "en") }
         }
         """
         try:
@@ -265,3 +266,110 @@ class CocktailService:
                     matching_cocktails.append(cocktail)
 
         return matching_cocktails
+
+    def get_similar_cocktails(self, cocktail_id: str, limit: int = 10) -> List[Dict[str, Any]]:
+        """Get cocktails similar to the given cocktail based on ingredient overlap"""
+        all_cocktails = self.get_all_cocktails()
+
+        # Find the target cocktail
+        target_cocktail = None
+        for cocktail in all_cocktails:
+            if cocktail.id == cocktail_id:
+                target_cocktail = cocktail
+                break
+
+        if not target_cocktail or not target_cocktail.parsed_ingredients:
+            return []
+
+        target_ingredients = set(ing.lower() for ing in target_cocktail.parsed_ingredients)
+        similarities = []
+
+        for cocktail in all_cocktails:
+            if cocktail.id == cocktail_id or not cocktail.parsed_ingredients:
+                continue
+
+            cocktail_ingredients = set(ing.lower() for ing in cocktail.parsed_ingredients)
+            intersection = len(target_ingredients & cocktail_ingredients)
+            union = len(target_ingredients | cocktail_ingredients)
+
+            if union > 0:
+                similarity_score = intersection / union
+                similarities.append({
+                    "cocktail": cocktail,
+                    "similarity_score": similarity_score
+                })
+
+        # Sort by similarity score descending and return top limit
+        similarities.sort(key=lambda x: x["similarity_score"], reverse=True)
+        return similarities[:limit]
+
+    def get_same_vibe_cocktails(self, cocktail_id: str, limit: int = 10) -> List[Cocktail]:
+        """Get cocktails in the same graph community/cluster as the given cocktail"""
+        from .graph_service import GraphService  # Import locally to avoid circular imports
+
+        all_cocktails = self.get_all_cocktails()
+
+        # Find the target cocktail
+        target_cocktail = None
+        for cocktail in all_cocktails:
+            if cocktail.id == cocktail_id:
+                target_cocktail = cocktail
+                break
+
+        if not target_cocktail:
+            return []
+
+        # Get graph analysis with communities
+        graph_service = GraphService()
+        analysis = graph_service.analyze_graph()
+        communities = analysis.get('communities', {})
+
+        # Find the community of the target cocktail
+        target_community = None
+        for node, community_id in communities.items():
+            if node == target_cocktail.name:
+                target_community = community_id
+                break
+
+        if target_community is None:
+            return []
+
+        # Find all cocktails in the same community
+        same_vibe_cocktails = []
+        for cocktail in all_cocktails:
+            if cocktail.id != cocktail_id and cocktail.name in communities:
+                if communities[cocktail.name] == target_community:
+                    same_vibe_cocktails.append(cocktail)
+
+        # Return up to limit cocktails
+        return same_vibe_cocktails[:limit]
+
+    def get_bridge_cocktails(self, limit: int = 10) -> List[Cocktail]:
+        """Get cocktails that connect different communities (bridge cocktails)"""
+        from .graph_service import GraphService  # Import locally to avoid circular imports
+
+        all_cocktails = self.get_all_cocktails()
+
+        # Get graph analysis with communities
+        graph_service = GraphService()
+        analysis = graph_service.analyze_graph()
+        communities = analysis.get('communities', {})
+
+        bridge_cocktails = []
+
+        for cocktail in all_cocktails:
+            if not cocktail.parsed_ingredients:
+                continue
+
+            # Collect communities of ingredients used in this cocktail
+            ingredient_communities = set()
+            for ingredient_name in cocktail.parsed_ingredients:
+                if ingredient_name in communities:
+                    ingredient_communities.add(communities[ingredient_name])
+
+            # If ingredients span more than one community, it's a bridge cocktail
+            if len(ingredient_communities) > 1:
+                bridge_cocktails.append(cocktail)
+
+        # Return up to limit bridge cocktails
+        return bridge_cocktails[:limit]
