@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import cocktails, ingredients, sparql
+from .utils.front_server import start_frontend_server
+
+start_frontend_server()
 
 app = FastAPI()
 
