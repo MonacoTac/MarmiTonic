@@ -1,6 +1,4 @@
-# This script queries DBpedia for IBA official cocktails and saves the results in Turtle format.
 import requests
-import time
 import sys
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
