@@ -42,13 +42,24 @@
             <p>Menu</p>
         </div>
     </header>
-    <main>
-        <h1>“Bienvenue sur MarmiTonic. Découvrez les recettes de cocktails qui vous ressemblent !„</h1>
-        <div>
-            <img id="cocktail" value="2" class="cocktail-1" src="assets/cocktail1.png" alt="cocktail">
-            <img id="cocktail" value="4" class="cocktail-2" src="assets/cocktail2.png" alt="cocktail">
-            <img id="cocktail" value="4" class="cocktail-3" src="assets/cocktail3.png" alt="cocktail">
-            <img id="cocktail" value="2" class="cocktail-4" src="assets/cocktail4.png" alt="cocktail">
+    <main class="hero-main">
+        <div class="hero-content">
+            <div class="hero-text">
+                <h1 class="hero-title">Bienvenue sur <span class="brand-highlight">MarmiTonic</span></h1>
+                <p class="hero-subtitle">Découvrez les recettes de cocktails qui vous ressemblent !</p>
+                <div class="hero-buttons">
+                    <a href="pages/discovery.html" class="cta-button primary">
+                        <i class="fa fa-search"></i> Explorer les cocktails
+                    </a>
+                    <a href="pages/my-bar.html" class="cta-button secondary">
+                        <i class="fa fa-glass"></i> Mon bar
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="cocktail-decorations">
+            <img class="cocktail-decoration cocktail-left" src="assets/cocktail1.png" alt="cocktail">
+            <img class="cocktail-decoration cocktail-right" src="assets/cocktail2.png" alt="cocktail">
         </div>
     </main>
     <script>
@@ -61,17 +72,6 @@
             document.getElementById("navbar").classList.remove("hide");
             menuNoNavbar.style.display="none";
         };
-
-        document.addEventListener("mousemove", parallax);
-        function parallax(event) {
-            this.querySelectorAll("#cocktail").forEach((shift) => {
-                const position = shift.getAttribute("value");
-                const x = (window.innerWidth - event.pageX * position) / 90;
-                const y = (window.innerHeight - event.pageY * position) / 90;
-
-                shift.style.transform = `translateX(${x}px) translateY(${y}px)`;
-            });
-        }
     </script>
 </body>
 </html>
