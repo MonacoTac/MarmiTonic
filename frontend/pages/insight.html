@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <!-- Page Specific Styles -->
+    <link rel="stylesheet" href="../css/insight.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Insights - MarmiTonic</title>
+</head>
+<body>
+    <header>
+        <nav id="navbar" class="navbar">
+            <div class="navbar-left">
+                <a href="discovery.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Explorer
+                    </div>
+                </a>
+                <a href="my-bar.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Mon Bar
+                    </div>
+                </a>
+                <a href="planner.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Planificateur
+                    </div>
+                </a>
+            </div>
+            <div class="navbar-center">
+                <img src="../assets/logo.png" alt="MarmiTonic Logo">
+                <a href="../index.html" class="link-main">
+                    <span>MarmiTonic</span>
+                </a>
+            </div>
+            <div class="navbar-right">
+                <input type="text" placeholder="Recherche">
+                <img src="../assets/account.png" alt="">
+            </div>
+        </nav>
+        
+        <div id="no-navbar-menu" class="no-navbar-menu">
+            <i class="fa fa-bars" aria-hidden="true"></i>
+            <p>Menu</p>
+        </div>
+    </header>
+    <main class="page-container">
+        <div class="insights-container">
+            <h1 class="page-title">Insights</h1>
+            <p class="page-subtitle">Explorez les relations entre cocktails et ingrédients</p>
+            
+            <div class="visualization-section">
+                <div class="section-header">
+                    <h2>Visualisation du Graphe</h2>
+                    <button id="highlight-components" class="btn-primary">
+                        <i class="fa fa-lightbulb-o"></i> Mettre en évidence les composants
+                    </button>
+                </div>
+                
+                <div id="graph-container" class="graph-container"></div>
+                
+                <div class="controls">
+                    <h3>Contrôles de Force</h3>
+                    <div class="force-controls">
+                        <div class="control-item">
+                            <label for="force-strength">Force d'attraction:</label>
+                            <input type="range" id="force-strength" min="0.01" max="0.5" step="0.01" value="0.1">
+                            <span class="control-value">0.1</span>
+                        </div>
+                        <div class="control-item">
+                            <label for="distance">Distance:</label>
+                            <input type="range" id="distance" min="50" max="200" step="10" value="100">
+                            <span class="control-value">100</span>
+                        </div>
+                        <div class="control-item">
+                            <label for="charge">Charge:</label>
+                            <input type="range" id="charge" min="-100" max="-10" step="5" value="-50">
+                            <span class="control-value">-50</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    <!-- D3.js Library -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Core Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/navbar.js"></script>
+    <!-- Visualization Scripts -->
+    <script src="../js/d3_visualization.js"></script>
+    <script src="../js/visualization.js"></script>
+</body>
+</html>
