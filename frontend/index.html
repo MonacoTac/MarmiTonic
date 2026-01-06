@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/styles.css">
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="css/common.css">
+    <link rel="stylesheet" href="css/navbar.css">
+    <!-- Page Specific Styles -->
+    <link rel="stylesheet" href="css/home.css">
+    <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>MarmiTonic</title>
 </head>
@@ -29,7 +34,9 @@
             </div>
             <div class="navbar-center">
                 <img src="assets/logo.png" alt="MarmiTonic Logo">
+                <a href="index.html" class="link-main">
                     <span>MarmiTonic</span>
+                </a>
             </div>
             <div class="navbar-right">
                 <input type="text" placeholder="Recherche">
@@ -62,16 +69,7 @@
             <img class="cocktail-decoration cocktail-right" src="assets/cocktail2.png" alt="cocktail">
         </div>
     </main>
-    <script>
-        let prevScrollPos = window.pageYOffset;
-
-        menuNoNavbar = document.getElementById("no-navbar-menu");
-        menuNoNavbar.style.display = "none";
-
-        menuNoNavbar.onclick = function(){
-            document.getElementById("navbar").classList.remove("hide");
-            menuNoNavbar.style.display="none";
-        };
-    </script>
+    <!-- Navbar Script -->
+    <script src="js/navbar.js"></script>
 </body>
 </html>

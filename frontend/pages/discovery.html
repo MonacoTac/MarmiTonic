@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../css/styles.css">
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <!-- Page Specific Styles -->
+    <link rel="stylesheet" href="../css/discovery.css">
+    <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>Discovery - MarmiTonic</title>
 </head>
@@ -381,48 +386,10 @@
             </div>
         </section>
     </main>
-    <script>
-        let prevScrollPos = window.pageYOffset;
-
-        menuNoNavbar = document.getElementById("no-navbar-menu");
-        menuNoNavbar.style.display = "none";
-
-        menuNoNavbar.onclick = function(){
-            document.getElementById("navbar").classList.remove("hide");
-            menuNoNavbar.style.display="none";
-        };
-
-        // Scroll arrows functionality
-        document.querySelectorAll('.cocktails-scroll-container').forEach(container => {
-            const row = container.querySelector('.cocktails-row');
-            const leftArrow = container.querySelector('.scroll-arrow-left');
-            const rightArrow = container.querySelector('.scroll-arrow-right');
-
-            if (!row || !leftArrow || !rightArrow) return;
-
-            leftArrow.addEventListener('click', () => {
-                row.scrollBy({ left: -400, behavior: 'smooth' });
-            });
-
-            rightArrow.addEventListener('click', () => {
-                row.scrollBy({ left: 400, behavior: 'smooth' });
-            });
-
-            // Update arrow visibility based on scroll position
-            function updateArrows() {
-                const isAtStart = row.scrollLeft <= 0;
-                const isAtEnd = row.scrollLeft + row.clientWidth >= row.scrollWidth - 1;
-                
-                leftArrow.style.opacity = isAtStart ? '0.3' : '1';
-                leftArrow.style.pointerEvents = isAtStart ? 'none' : 'auto';
-                rightArrow.style.opacity = isAtEnd ? '0.3' : '1';
-                rightArrow.style.pointerEvents = isAtEnd ? 'none' : 'auto';
-            }
-
-            row.addEventListener('scroll', updateArrows);
-            updateArrows(); // Initial check
-        });
-    </script>
-    <script src="../js/app.js"></script>
+    <!-- Core Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/navbar.js"></script>
+    <!-- Page Specific Scripts -->
+    <script src="../js/discovery.js"></script>
 </body>
 </html>
