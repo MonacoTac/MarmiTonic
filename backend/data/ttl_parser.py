@@ -7,9 +7,8 @@ Retourne des instances de classes Pydantic définies dans backend/models
 import sys
 from pathlib import Path
 
-# Ajouter le répertoire backend au path pour importer les models
-backend_path = Path(__file__).parent.parent / "backend"
-sys.path.insert(0, str(backend_path))
+backend_path = Path(__file__).parent.parent
+sys.path.insert(0, str(backend_path.resolve()))
 
 from rdflib import Graph, Namespace, Literal, URIRef
 from rdflib.namespace import RDF, RDFS
