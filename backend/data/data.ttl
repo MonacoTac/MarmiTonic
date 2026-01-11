@@ -392,7 +392,7 @@
 		dbc:Cocktails_with_lemonade ,
 		dbc:Citrus_cocktails ;
 	dbp:ingredients	"* 6 cl sloe gin\n* 3 cl fresh grapefruit juice\n* 1 cl simple syrup\n* 8 cl soda water\n* 1 egg white"@en ,
-		"4.5 cl gin\n 1.5 cl fresh lime juice\n* 1.5 cl fresh lemon juice\n* 3 cl simple syrup\n* 6 cl cream\n* 1 egg white\n* 3 dashes orange flower water\n* 2 drops vanilla extract\n* soda water"@en ,
+		"*4.5 cl gin\n* 1.5 cl fresh lime juice\n* 1.5 cl fresh lemon juice\n* 3 cl simple syrup\n* 6 cl cream\n* 1 egg white\n* 3 dashes orange flower water\n* 2 drops vanilla extract\n* soda water"@en ,
 		"* 4.5 cl gin\n* 3 cl fresh lemon juice\n* 1 cl simple syrup\n* Splash of soda water"@en ;
 	dbp:prep	"Shake all ingredients with ice cubes, except soda water. Pour into glass. Top with soda water."@en ,
 		"All ingredients except the soda are poured in a mixing glass, dry shaken  for two minutes, then ice is added and shaken hard for another minute. Strain into a highball glass without ice and topped with soda."@en ;
@@ -1644,8 +1644,8 @@ dbr:Margarita	rdfs:label	"Margarita"@en ,
 		dbr:Balinese_Room ,
 		dbr:IBA_Official_Cocktail ,
 		<http://dbpedia.org/resource/Hussong\u0027s_Cantina> ,
-		dbr:Orange_soda ,
 		<http://dbpedia.org/resource/Slush_(beverage)> ,
+		dbr:Orange_soda ,
 		dbr:Sports_drink ,
 		dbr:Banana ,
 		<http://dbpedia.org/resource/Hurricane_(cocktail)> ,
@@ -2031,7 +2031,7 @@ dbr:Sazerac	rdfs:label	"Sazerac"@fr ,
 		dbc:Cocktails_with_absinthe ,
 		dbc:New_Orleans_cocktails ,
 		dbc:Cocktails_with_brandy ;
-	dbp:ingredients	"50 ml cognac\n 10 ml absinthe\n*One sugar cube\n*Two dashes Peychaud's Bitters"@en ;
+	dbp:ingredients	"*50 ml cognac\n* 10 ml absinthe\n*One sugar cube\n*Two dashes Peychaud's Bitters"@en ;
 	dbp:prep	"Rinse a chilled old-fashioned glass with absinthe or anisette, and add crushed ice. Stir the other ingredients, with ice in a different glass. Discard ice and excess absinthe from the first glass, and strain the mixture into that glass."@en ;
 	dbp:served	"straight"@en ;
 	dbp:garnish	<http://dbpedia.org/resource/Zest_(ingredient)> ;
@@ -2103,7 +2103,7 @@ dbr:Moscow_mule	rdfs:label	"Moscow mule"@en ,
 		dbc:Cocktails_with_ginger_beer ,
 		dbc:Sweet_cocktails ,
 		dbc:Articles_containing_video_clips ;
-	dbp:ingredients	"45 ml vodka\n 10 ml lime juice\n* 120 ml ginger beer"@en ;
+	dbp:ingredients	"*45 ml vodka\n* 10 ml lime juice\n* 120 ml ginger beer"@en ;
 	dbp:prep	"In an Mule Cup or rocks glass, combine the vodka and ginger beer. Add lime juice and gently stir to involve all ingredients."@en ;
 	dbp:served	"rocks"@en ;
 	dbp:garnish	"Lime Slice"@en ;

@@ -1,33 +1,90 @@
 from .sparql_service import SparqlService
 from ..models.ingredient import Ingredient
 from typing import List, Dict
+from ..data.ttl_parser import get_all_ingredients as get_local_ingredients
 
 class IngredientService:
     def __init__(self):
-        self.sparql_service = SparqlService()
+        self.sparql_service = SparqlService(local_graph_path="backend/data/data.ttl")
         self.inventories: Dict[str, List[str]] = {}  # user_id -> list of ingredient names
 
     def get_all_ingredients(self) -> List[Ingredient]:
-        query = """
-        SELECT ?id ?name ?category ?description WHERE {
-            ?id rdf:type dbo:Food .
-            ?id rdfs:label ?name .
-            FILTER(LANG(?name) = "en")
-            OPTIONAL { ?id dbo:category ?category }
-            OPTIONAL { ?id dbo:abstract ?description . FILTER(LANG(?description) = "en") }
-        } LIMIT 50
-        """
-        results = self.sparql_service.execute_query(query)
+        # First, load parsed ingredients from the local TTL parser
         ingredients = []
-        for result in results["results"]["bindings"]:
-            ingredient = Ingredient(
-                id=result["id"]["value"],
-                name=result["name"]["value"],
-                category=result.get("category", {}).get("value", "Unknown"),
-                description=result.get("description", {}).get("value")
-            )
-            ingredients.append(ingredient)
+        try:
+            local_ings = get_local_ingredients()
+            if local_ings:
+                ingredients.extend(local_ings)
+        except Exception:
+            # Fall back to empty list if parser fails
+            local_ings = []
+
+        # If we have less than 50, supplement with DBpedia
+        if len(ingredients) < 50:
+            dbpedia_query = """
+            SELECT ?id ?name ?category ?description WHERE {
+                ?id rdf:type dbo:Food .
+                ?id rdfs:label ?name .
+                FILTER(LANG(?name) = "en")
+                OPTIONAL { ?id dbo:category ?category }
+                OPTIONAL { ?id dbo:abstract ?description . FILTER(LANG(?description) = "en") }
+            } LIMIT 50
+            """
+            results = self.sparql_service.execute_query(dbpedia_query)
+            for result in results["results"]["bindings"]:
+                uri = result["id"]["value"]
+                # Avoid duplicates by URI or name
+                existing_ids = {ing.id for ing in ingredients if getattr(ing, 'id', None)}
+                existing_names = {ing.name for ing in ingredients if getattr(ing, 'name', None)}
+                if uri not in existing_ids and result["name"]["value"] not in existing_names:
+                    ingredient = Ingredient(
+                        id=uri,
+                        name=result["name"]["value"],
+                        category=result.get("category", {}).get("value", "Unknown"),
+                        description=result.get("description", {}).get("value")
+                    )
+                    ingredients.append(ingredient)
+                    if len(ingredients) >= 50:
+                        break
+
         return ingredients
+
+    def _get_local_ingredient_uris(self) -> List[str]:
+        """Extract unique ingredient URIs from cocktail wikiPageWikiLink"""
+        query = """
+        SELECT DISTINCT ?ingredient WHERE {
+            ?cocktail dbo:wikiPageWikiLink ?ingredient .
+            ?cocktail rdfs:label ?cocktailName .
+            FILTER(LANG(?cocktailName) = "en")
+        }
+        """
+        try:
+            results = self.sparql_service.execute_local_query(query)
+            return [result["ingredient"]["value"] for result in results["results"]["bindings"]]
+        except:
+            return []
+
+    def _query_local_ingredient(self, uri: str) -> Ingredient:
+        """Query local graph for ingredient details"""
+        query = f"""
+        SELECT ?name ?description WHERE {{
+            <{uri}> rdfs:label ?name .
+            FILTER(LANG(?name) = "en")
+            OPTIONAL {{ <{uri}> dbo:abstract ?description . FILTER(LANG(?description) = "en") }}
+        }}
+        """
+        try:
+            results = self.sparql_service.execute_local_query(query)
+            if results["results"]["bindings"]:
+                result = results["results"]["bindings"][0]
+                return Ingredient(
+                    id=uri,
+                    name=result.get("name", {}).get("value", "Unknown"),
+                    description=result.get("description", {}).get("value")
+                )
+        except:
+            pass
+        return None
 
     def search_ingredients(self, query: str) -> List[Ingredient]:
         sparql_query = f"""

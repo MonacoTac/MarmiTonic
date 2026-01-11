@@ -6,7 +6,7 @@ from ..services.similarity_service import SimilarityService
 router = APIRouter()
 similarity_service = SimilarityService()
 
-@router.get("/cocktails")
+@router.get("/")
 async def get_cocktails(q: str = None):
     service = CocktailService()
     try:
@@ -17,7 +17,7 @@ async def get_cocktails(q: str = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/cocktails/feasible/{user_id}")
+@router.get("/feasible/{user_id}")
 async def get_feasible_cocktails(user_id: str):
     service = CocktailService()
     try:
@@ -25,7 +25,7 @@ async def get_feasible_cocktails(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid user_id or query failure: {str(e)}")
 
-@router.get("/cocktails/almost-feasible/{user_id}")
+@router.get("/almost-feasible/{user_id}")
 async def get_almost_feasible_cocktails(user_id: str):
     service = CocktailService()
     try:
@@ -33,7 +33,7 @@ async def get_almost_feasible_cocktails(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid user_id or query failure: {str(e)}")
 
-@router.get("/cocktails/by-ingredients")
+@router.get("/by-ingredients")
 async def get_cocktails_by_ingredients(ingredients: List[str] = Query(..., description="List of ingredients to search for")):
     service = CocktailService()
     try:
@@ -74,3 +74,34 @@ async def build_similarity_index(force_rebuild: bool = False, response: Response
         return {"status": "success", "message": f"Index built with {len(similarity_service.cocktails)} cocktails"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error building index: {str(e)}")
+@router.get("/by-uris")
+async def get_cocktails_by_uris(uris: List[str] = Query(..., description="List of ingredient URIs to search for")):
+    service = CocktailService()
+    try:
+        return service.get_cocktails_by_uris(uris)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/similar/{cocktail_id}")
+async def get_similar_cocktails(cocktail_id: str, limit: int = 10):
+    service = CocktailService()
+    try:
+        return service.get_similar_cocktails(cocktail_id, limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/same-vibe/{cocktail_id}")
+async def get_same_vibe_cocktails(cocktail_id: str, limit: int = 10):
+    service = CocktailService()
+    try:
+        return service.get_same_vibe_cocktails(cocktail_id, limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/bridge")
+async def get_bridge_cocktails(limit: int = 10):
+    service = CocktailService()
+    try:
+        return service.get_bridge_cocktails(limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
