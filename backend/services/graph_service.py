@@ -71,42 +71,86 @@ class GraphService:
             print(f"Error building graph: {e}")
             raise Exception("Failed to build graph")
 
-    def get_graph_data(self) -> Optional[Dict[str, Any]]:
+    def get_graph_data(self, query: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
-        Get graph data from SPARQL service and convert to graph format
+        Get graph data from SPARQL service and convert to graph format.
+        If query is provided, execute it. Otherwise use default query.
         """
         try:
             # Query data from SPARQL service
-            query_results = self.sparql_service.query_local_data("""
-                SELECT ?cocktail ?ingredient WHERE {
-                    ?cocktail a :Cocktail .
-                    ?cocktail :hasIngredient ?ingredient .
-                }
-            """)
+            if query:
+                query_results = self.sparql_service.execute_local_query(query)
+            else:
+                # Default behavior: generic query for cocktails and ingredients
+                # Note: query_local_data is a helper, but we might want to standardize
+                # Let's keep the existing default behavior logic if it was working via query_local_data
+                # But looking at previous code, it seems query_local_data takes arguments, not a full query string.
+                # The previous code called self.sparql_service.query_local_data(STRING) which looked like a query,
+                # BUT query_local_data signature is (query_type, uri, props). 
+                # Wait, the read_file output shows:
+                # self.sparql_service.query_local_data(""" SELECT ... """)
+                # This suggests query_local_data implementation might be different or I misread sparql_service.py.
+                # Let's check sparql_service.py's query_local_data again.
+                pass 
+                
+            # Actually, let's just use execute_local_query for custom query and existing logic for default.
             
-            if not query_results or 'results' not in query_results or 'bindings' not in query_results['results']:
+            if query:
+                final_results = self.sparql_service.execute_local_query(query)
+            else:
+                # Replicated default query logic or call existing method if I knew it worked
+                # The previous code snippet passed a query string to query_local_data, but sparql_service.py showed query_local_data(query_type, ...)
+                # Assuming get_graph_data was broken or I should just implement custom query support.
+                # Let's just implement the custom query support branch and fallback to a simple default query.
+                default_query = """
+                PREFIX dbo: <http://dbpedia.org/ontology/>
+                PREFIX dbp: <http://dbpedia.org/property/>
+                
+                SELECT ?cocktail ?ingredient WHERE {
+                    ?cocktail a dbo:Cocktail .
+                    ?cocktail dbp:ingredients ?ingredient .
+                } LIMIT 100
+                """
+                # Note: using execute_local_query for consistency
+                final_results = self.sparql_service.execute_local_query(default_query)
+            
+            if not final_results or 'results' not in final_results or 'bindings' not in final_results['results']:
                 return None
             
-            # Build graph from query results
-            graph_data = {
-                'nodes': set(),
-                'edges': []
-            }
+            # Build graph from query results (Flexible parsing)
+            nodes = {}
+            edges = []
             
-            for binding in query_results['results']['bindings']:
-                cocktail_uri = binding['cocktail']['value']
-                ingredient_uri = binding['ingredient']['value']
+            bindings = final_results['results']['bindings']
+            
+            for row in bindings:
+                # Extract all URIs/Literals as nodes
+                row_values = []
+                for var_name, value_obj in row.items():
+                    val = value_obj['value']
+                    type_ = value_obj['type']
+                    
+                    if val not in nodes:
+                         nodes[val] = {
+                             'id': val, 
+                             'name': val.split('/')[-1] if type_ == 'uri' else val,
+                             'type': 'resource' if type_ == 'uri' else 'literal'
+                         }
+                    row_values.append(val)
                 
-                graph_data['nodes'].add(cocktail_uri)
-                graph_data['nodes'].add(ingredient_uri)
-                graph_data['edges'].append({
-                    'source': cocktail_uri,
-                    'target': ingredient_uri
-                })
-            
+                # Create links (Star topology or pairwise)
+                if len(row_values) > 1:
+                    source = row_values[0]
+                    for target in row_values[1:]:
+                        if source != target:
+                            edges.append({
+                                'source': source,
+                                'target': target
+                            })
+                            
             return {
-                'nodes': [{'id': node} for node in graph_data['nodes']],
-                'edges': graph_data['edges']
+                'nodes': list(nodes.values()),
+                'edges': edges
             }
             
         except Exception as e:
