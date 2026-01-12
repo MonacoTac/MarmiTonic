@@ -1,5 +1,13 @@
 /* Home Page Styles */
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
+@font-face {
+    font-family: "Beckan";
+    src: url(../assets/Beckan.otf) format("opentype");
+    font-display: swap;
+}
+
 .hero-main {
     min-height: 100vh;
     display: flex;
@@ -19,6 +27,7 @@
 .hero-title {
     font-family: 'Beckan', 'Inter', sans-serif;
     font-size: clamp(2.5rem, 6vw, 5rem);
+    font-weight: 700;
     color: var(--primary-color);
     margin-bottom: 1.5rem;
     line-height: 1.2;

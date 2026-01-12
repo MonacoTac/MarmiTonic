@@ -1,5 +1,12 @@
 /* Navbar Styles */
 
+/* Import de la police Beckan pour le logo */
+@font-face {
+    font-family: "Beckan";
+    src: url(../assets/Beckan.otf) format("opentype");
+    font-display: swap;
+}
+
 .navbar {
     position: fixed;
     left: 0;

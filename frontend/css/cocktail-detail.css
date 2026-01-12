@@ -1,5 +1,7 @@
 /* Cocktail Detail Page Styles */
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
 .cocktail-detail-page {
     padding-top: 80px;
     min-height: 100vh;
@@ -114,8 +116,9 @@
 }
 
 .cocktail-title {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
     color: var(--primary-color);
     margin: 0;
     line-height: 1.1;
@@ -240,8 +243,9 @@
 
 .section-title h2,
 .section-title h3 {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 1.8rem;
+    font-weight: 700;
     color: var(--primary-color);
     margin: 0;
 }

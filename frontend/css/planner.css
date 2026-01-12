@@ -1,5 +1,7 @@
 /* Planner Page Styles - Spotify-inspired */
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
 .planner-page {
     padding-top: 100px;
     padding-bottom: 80px;
@@ -23,8 +25,9 @@
 }
 
 .page-title {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 700;
     color: var(--primary-color);
     margin: 0;
     letter-spacing: -1px;
@@ -122,7 +125,7 @@
 }
 
 .playlist-title {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 4rem;
     font-weight: 700;
     margin: 0.5rem 0;
@@ -148,8 +151,9 @@
 }
 
 .section-title {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 2rem;
+    font-weight: 700;
     color: var(--primary-color);
     margin-bottom: 1.5rem;
     letter-spacing: -0.5px;
@@ -331,8 +335,9 @@
 }
 
 .modal-title {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 2rem;
+    font-weight: 700;
     color: var(--primary-color);
     margin: 0.25rem 0;
     letter-spacing: -0.5px;

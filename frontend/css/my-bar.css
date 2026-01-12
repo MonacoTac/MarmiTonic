@@ -1,5 +1,7 @@
 /* My Bar Page Styles */
 
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap');
+
 .my-bar-container {
     max-width: 1400px;
     margin: 0 auto;
@@ -7,8 +9,9 @@
 }
 
 .page-title {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 3rem;
+    font-weight: 700;
     color: var(--primary-color);
     margin-bottom: 0.5rem;
     text-align: center;
@@ -48,8 +51,9 @@
 }
 
 .section-header h2 {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 1.8rem;
+    font-weight: 700;
     color: var(--primary-color);
     margin: 0;
 }
@@ -287,8 +291,9 @@
 }
 
 .results-header h2 {
-    font-family: 'Beckan', 'Inter', sans-serif;
+    font-family: 'Playfair Display', 'Inter', serif;
     font-size: 1.8rem;
+    font-weight: 700;
     color: var(--primary-color);
     margin: 0;
 }
