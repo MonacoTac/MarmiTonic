@@ -338,7 +338,7 @@ class CocktailService:
 
     def get_same_vibe_cocktails(self, cocktail_id: str, limit: int = 10) -> List[Cocktail]:
         """Get cocktails in the same graph community/cluster as the given cocktail"""
-        from .graph_service import GraphService  # Import locally to avoid circular imports
+        from services.graph_service import GraphService  # Import locally to avoid circular imports
 
         all_cocktails = self.get_all_cocktails()
 
@@ -391,7 +391,7 @@ class CocktailService:
 
     def get_bridge_cocktails(self, limit: int = 10) -> List[Cocktail]:
         """Get cocktails that connect different communities (bridge cocktails)"""
-        from .graph_service import GraphService  # Import locally to avoid circular imports
+        from services.graph_service import GraphService  # Import locally to avoid circular imports
 
         all_cocktails = self.get_all_cocktails()
 

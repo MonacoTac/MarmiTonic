@@ -79,29 +79,9 @@ class GraphService:
         try:
             # Query data from SPARQL service
             if query:
-                query_results = self.sparql_service.execute_local_query(query)
-            else:
-                # Default behavior: generic query for cocktails and ingredients
-                # Note: query_local_data is a helper, but we might want to standardize
-                # Let's keep the existing default behavior logic if it was working via query_local_data
-                # But looking at previous code, it seems query_local_data takes arguments, not a full query string.
-                # The previous code called self.sparql_service.query_local_data(STRING) which looked like a query,
-                # BUT query_local_data signature is (query_type, uri, props). 
-                # Wait, the read_file output shows:
-                # self.sparql_service.query_local_data(""" SELECT ... """)
-                # This suggests query_local_data implementation might be different or I misread sparql_service.py.
-                # Let's check sparql_service.py's query_local_data again.
-                pass 
-                
-            # Actually, let's just use execute_local_query for custom query and existing logic for default.
-            
-            if query:
                 final_results = self.sparql_service.execute_local_query(query)
             else:
-                # Replicated default query logic or call existing method if I knew it worked
-                # The previous code snippet passed a query string to query_local_data, but sparql_service.py showed query_local_data(query_type, ...)
-                # Assuming get_graph_data was broken or I should just implement custom query support.
-                # Let's just implement the custom query support branch and fallback to a simple default query.
+                # Default behavior: generic query for cocktails and ingredients
                 default_query = """
                 PREFIX dbo: <http://dbpedia.org/ontology/>
                 PREFIX dbp: <http://dbpedia.org/property/>
@@ -111,7 +91,6 @@ class GraphService:
                     ?cocktail dbp:ingredients ?ingredient .
                 } LIMIT 100
                 """
-                # Note: using execute_local_query for consistency
                 final_results = self.sparql_service.execute_local_query(default_query)
             
             if not final_results or 'results' not in final_results or 'bindings' not in final_results['results']:
