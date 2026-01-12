@@ -146,9 +146,14 @@ class CocktailService:
             print(f"SPARQL query failed: {e}")
             return []
 
-        cocktails = []
+        cocktails_dict = {}
         for result in results["results"]["bindings"]:
             cocktail_uri = result["cocktail"]["value"]
+
+            # If we've already seen this cocktail URI, skip (keep first occurrence)
+            if cocktail_uri in cocktails_dict:
+                continue
+
             name = result.get("name", {}).get("value", "Unknown Cocktail")
             description = result.get("desc", {}).get("value")
             image = result.get("image", {}).get("value")
@@ -176,9 +181,10 @@ class CocktailService:
                 garnish=garnish,
                 source_link=source_link
             )
-            cocktails.append(cocktail)
+            cocktails_dict[cocktail_uri] = cocktail
 
-        return cocktails
+        # Return list of unique cocktails preserving first-seen order
+        return list(cocktails_dict.values())
 
     def search_cocktails(self, query: str) -> List[Cocktail]:
         """Search cocktails by name"""
