@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from typing import Optional
-from ..services.graph_service import GraphService
+from services.graph_service import GraphService
 
 router = APIRouter()
 

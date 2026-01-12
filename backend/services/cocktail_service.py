@@ -1,7 +1,7 @@
 import os
-from .sparql_service import SparqlService
-from .ingredient_service import IngredientService
-from ..models.cocktail import Cocktail
+from services.sparql_service import SparqlService
+from services.ingredient_service import IngredientService
+from models.cocktail import Cocktail
 from typing import List, Dict, Any
 import rdflib
 from rdflib import Graph, URIRef, Literal
@@ -338,7 +338,7 @@ class CocktailService:
 
     def get_same_vibe_cocktails(self, cocktail_id: str, limit: int = 10) -> List[Cocktail]:
         """Get cocktails in the same graph community/cluster as the given cocktail"""
-        from .graph_service import GraphService  # Import locally to avoid circular imports
+        from services.graph_service import GraphService  # Import locally to avoid circular imports
 
         all_cocktails = self.get_all_cocktails()
 
@@ -391,7 +391,7 @@ class CocktailService:
 
     def get_bridge_cocktails(self, limit: int = 10) -> List[Cocktail]:
         """Get cocktails that connect different communities (bridge cocktails)"""
-        from .graph_service import GraphService  # Import locally to avoid circular imports
+        from services.graph_service import GraphService  # Import locally to avoid circular imports
 
         all_cocktails = self.get_all_cocktails()
 

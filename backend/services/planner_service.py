@@ -1,6 +1,6 @@
-from .cocktail_service import CocktailService
-from .ingredient_service import IngredientService
-from .sparql_service import SparqlService
+from services.cocktail_service import CocktailService
+from services.ingredient_service import IngredientService
+from services.sparql_service import SparqlService
 from typing import List, Dict, Set, Optional, Any
 
 
