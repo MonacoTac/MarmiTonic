@@ -1,7 +1,7 @@
 // API calls to the backend
 const API_BASE_URL = 'http://localhost:8000';
 
-// Fetch cocktails
+// Example API call to fetch cocktails
 async function fetchCocktails() {
     try {
         const response = await fetch(`${API_BASE_URL}/cocktails`);
@@ -11,12 +11,33 @@ async function fetchCocktails() {
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching cocktails:', error);
+        console.error('Error executing SPARQL query:', error);
         return [];
     }
 }
 
-// Fetch ingredients
+// Planner API: Playlist Mode Optimization
+async function optimizePlaylistMode(cocktailNames) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/planner/playlist-mode`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ cocktail_names: cocktailNames }),
+        });
+        if (!response.ok) {
+            throw new Error('Failed to optimize playlist mode');
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error optimizing playlist mode:', error);
+        throw error;
+    }
+}
+
+// Example API call to fetch ingredients
 async function fetchIngredients() {
     try {
         const response = await fetch(`${API_BASE_URL}/ingredients`);
@@ -31,7 +52,44 @@ async function fetchIngredients() {
     }
 }
 
-// Execute SPARQL query
+// Rechercher un cocktail avec son nom
+async function searchCocktails(query) {
+    if (!query || query.trim() === '') {
+        return [];
+    }
+    try {
+        const response = await fetch(`${API_BASE_URL}/cocktails?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+            throw new Error('Failed to search cocktails');
+        }
+        const data = await response.json();
+        
+        // Gérer différents formats de réponse
+        // Si la reponse est un tableau, le retourner directement   
+        if (Array.isArray(data)) {
+            return data;
+        }
+
+        // Si la réponse est un objet avec une clé 'data' qui est un tableau, le retourner
+        if (data && typeof data === 'object' && Array.isArray(data.data)) {
+            return data.data;
+        }
+
+        // Si la réponse est un objet, le mettre dans un tableau
+        if (data && typeof data === 'object' && data.id) {
+            return [data];
+        }
+        
+        // Default: return empty array
+        console.warn('Unexpected search response format:', data);
+        return [];
+    } catch (error) {
+        console.error('Error searching cocktails:', error);
+        return [];
+    }
+}
+
+// Example API call to execute SPARQL query
 async function executeSparqlQuery(query) {
     try {
         const response = await fetch(`${API_BASE_URL}/sparql`, {
@@ -49,104 +107,5 @@ async function executeSparqlQuery(query) {
     } catch (error) {
         console.error('Error executing SPARQL query:', error);
         return [];
-    }
-}
-
-// Graph API functions
-async function fetchBasicGraph() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/basic`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch basic graph');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching basic graph:', error);
-        return null;
-    }
-}
-
-async function fetchForceDirectedGraph() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/force-directed`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch force-directed graph');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching force-directed graph:', error);
-        return null;
-    }
-}
-
-async function fetchSparqlGraph() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/sparql`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch SPARQL graph');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching SPARQL graph:', error);
-        return null;
-    }
-}
-
-async function fetchCentralityGraph() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/centrality`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch centrality graph');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching centrality graph:', error);
-        return null;
-    }
-}
-
-async function fetchCommunityGraph() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/communities`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch community graph');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching community graph:', error);
-        return null;
-    }
-}
-
-async function fetchGraphStatistics() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/statistics`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch graph statistics');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching graph statistics:', error);
-        return null;
-    }
-}
-
-async function fetchGraphComponents() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/graphs/components`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch graph components');
-        }
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error('Error fetching graph components:', error);
-        return null;
     }
 }
