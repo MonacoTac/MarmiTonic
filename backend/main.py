@@ -2,19 +2,17 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .routes import cocktails, ingredients, planner, insights
 from .utils.front_server import start_frontend_server
+from .utils.graph_loader import get_shared_graph
 from rdflib import Graph
 from pathlib import Path
 
+# Start frontend server
 start_frontend_server()
 
 app = FastAPI()
 
-# Load RDF graph once at startup
-RDF_GRAPH = Graph()
-rdf_file = Path(__file__).parent / "data" / "iba_export.ttl"
-print(f"Loading RDF data from {rdf_file}...")
-RDF_GRAPH.parse(rdf_file, format="turtle")
-print(f"✓ Loaded {len(RDF_GRAPH)} triples")
+# Load RDF graph once at startup using shared loader
+RDF_GRAPH = get_shared_graph()
 
 
 # Enable CORS
