@@ -67,6 +67,8 @@ class D3DisjointForceGraph {
         this.simulation = d3.forceSimulation(this.nodes)
             .force('link', d3.forceLink(this.links).id(d => d.id).distance(this.distance))
             .force('charge', d3.forceManyBody().strength(this.chargeStrength))
+            .force('x', d3.forceX(0).strength(this.forceStrength))
+            .force('y', d3.forceY(0).strength(this.forceStrength))
             .force('center', d3.forceCenter(0, 0))
             .force('collide', d3.forceCollide().radius(20))
             .on('tick', () => this.ticked());
@@ -223,6 +225,8 @@ class D3DisjointForceGraph {
             this.simulation
                 .force('link', d3.forceLink(this.links).id(d => d.id).distance(this.distance))
                 .force('charge', d3.forceManyBody().strength(this.chargeStrength))
+                .force('x', d3.forceX(0).strength(this.forceStrength))
+                .force('y', d3.forceY(0).strength(this.forceStrength))
                 .alpha(1).restart();
         }
     }

@@ -25,10 +25,6 @@ class GraphVisualizationPage {
             linksCount: document.getElementById('links-count'),
             cocktailsCount: document.getElementById('cocktails-count'),
             ingredientsCount: document.getElementById('ingredients-count'),
-            // API-based data buttons
-            apiMargarita: document.getElementById('api-margarita'),
-            apiMartini: document.getElementById('api-martini'),
-            apiAllCocktails: document.getElementById('api-all-cocktails'),
             
             // NL & SPARQL controls
             nlInput: document.getElementById('nl-query-input'),
@@ -42,6 +38,7 @@ class GraphVisualizationPage {
     
     init() {
         this.setupEventListeners();
+        this.ginModeActive = false;
     }
     
     setupEventListeners() {
@@ -67,12 +64,6 @@ class GraphVisualizationPage {
         });
         
         // API-based data buttons
-        if (this.elements.apiMargarita) {
-            this.elements.apiMargarita.addEventListener('click', () => this.loadCocktailByName('Margarita'));
-        }
-        if (this.elements.apiMartini) {
-            this.elements.apiMartini.addEventListener('click', () => this.loadCocktailByName('Martini'));
-        }
         if (this.elements.apiAllCocktails) {
             this.elements.apiAllCocktails.addEventListener('click', () => this.loadAllCocktails());
         }
@@ -84,6 +75,21 @@ class GraphVisualizationPage {
         if (this.elements.executeSparqlBtn) {
             this.elements.executeSparqlBtn.addEventListener('click', () => this.executeSparqlGraph());
         }
+        
+        // Easter egg: listen for "gin" in the input
+        if (this.elements.nlInput) {
+            console.log('Easter egg listener attached to nlInput');
+            this.elements.nlInput.addEventListener('input', (e) => {
+                const value = e.target.value.toLowerCase();
+                console.log('NL Input value:', value);
+                if (value.includes('gin')) {
+                    console.log('GIN detected! Activating easter egg...');
+                    this.activateGinMode();
+                }
+            });
+        } else {
+            console.error('nlInput element not found!');
+        }
     }
     
     async convertNlToSparql() {
@@ -91,6 +97,11 @@ class GraphVisualizationPage {
         if (!prompt) {
             alert('Veuillez entrer une question.');
             return;
+        }
+
+        // Easter egg: detect "gin" in the input
+        if (prompt.toLowerCase().includes('gin')) {
+            this.activateGinMode();
         }
 
         this.elements.nlToSparqlBtn.disabled = true;
@@ -163,36 +174,6 @@ class GraphVisualizationPage {
         } finally {
             this.elements.executeSparqlBtn.disabled = false;
             this.elements.executeSparqlBtn.innerHTML = '<i class="fa fa-play"></i> Exécuter SPARQL';
-            this.hideLoadingState();
-        }
-    }
-    
-    async loadCocktailByName(cocktailName) {
-        this.showLoadingState();
-        
-        try {
-            // Fetch all cocktails and filter by name
-            const cocktails = await fetchCocktails();
-            const targetCocktail = cocktails.find(c =>
-                c.name.toLowerCase() === cocktailName.toLowerCase()
-            );
-            
-            if (!targetCocktail) {
-                throw new Error(`Cocktail "${cocktailName}" not found`);
-            }
-            
-            // Build graph data for the specific cocktail (ingredients are included in cocktail data)
-            const data = this.buildCocktailGraph(targetCocktail, null);
-            
-            if (data && data.nodes.length > 0) {
-                this.loadData(data);
-            } else {
-                throw new Error('No valid graph data could be constructed');
-            }
-        } catch (error) {
-            console.error('Error loading cocktail data:', error);
-            alert(`Erreur lors du chargement des données: ${error.message}`);
-        } finally {
             this.hideLoadingState();
         }
     }
@@ -333,45 +314,7 @@ class GraphVisualizationPage {
     
     
     async loadGraph() {
-        // Load from backend API if available, otherwise show sample data prompt
-        this.elements.loadBtn.classList.add('loading');
-        this.elements.loadBtn.disabled = true;
-        
-        try {
-            // Try to fetch from backend using the basic graph endpoint
-            const data = await fetchBasicGraph();
-            
-            if (data && data.nodes && data.links) {
-                this.loadData(data);
-            } else {
-                throw new Error('Invalid data format from backend');
-            }
-        } catch (error) {
-            // Fallback to sample data
-            console.log('Backend not available, using sample data:', error);
-            const sampleData = {
-                nodes: [
-                    {id: 'Margarita', name: 'Margarita', type: 'cocktail'},
-                    {id: 'Tequila', name: 'Tequila', type: 'ingredient'},
-                    {id: 'Lime Juice', name: 'Lime Juice', type: 'ingredient'},
-                    {id: 'Triple Sec', name: 'Triple Sec', type: 'ingredient'},
-                    {id: 'Martini', name: 'Martini', type: 'cocktail'},
-                    {id: 'Gin', name: 'Gin', type: 'ingredient'},
-                    {id: 'Vermouth', name: 'Vermouth', type: 'ingredient'}
-                ],
-                links: [
-                    {source: 'Margarita', target: 'Tequila', value: 2},
-                    {source: 'Margarita', target: 'Lime Juice', value: 1},
-                    {source: 'Margarita', target: 'Triple Sec', value: 1},
-                    {source: 'Martini', target: 'Gin', value: 2},
-                    {source: 'Martini', target: 'Vermouth', value: 1}
-                ]
-            };
-            this.loadData(sampleData);
-        } finally {
-            this.elements.loadBtn.classList.remove('loading');
-            this.elements.loadBtn.disabled = false;
-        }
+        await this.loadAllCocktails();
     }
     
     loadData(data) {
@@ -487,6 +430,72 @@ class GraphVisualizationPage {
         if (this.elements.ingredientsCount) {
             this.elements.ingredientsCount.textContent = ingredientsCount;
         }
+    }
+
+    activateGinMode() {
+        console.log('activateGinMode called! Current state:', this.ginModeActive);
+        
+        if (this.ginModeActive) {
+            console.log('Already active, skipping...');
+            return;
+        }
+        
+        this.ginModeActive = true;
+        console.log('Activating HORRIBLE GIN MODE!');
+        
+        // Créer un effet horrible en modifiant directement les styles
+        let isGreen = true;
+        const interval = setInterval(() => {
+            if (isGreen) {
+                // Vert fluo
+                document.body.style.backgroundColor = '#00ff00';
+                document.body.style.color = '#000000';
+                document.body.style.filter = 'saturate(5) brightness(2)';
+                document.querySelectorAll('*').forEach(el => {
+                    el.style.backgroundColor = '#00ff00';
+                    el.style.color = '#000000';
+                    el.style.borderColor = '#00ff00';
+                    el.style.boxShadow = '0 0 50px #00ff00';
+                    el.style.textShadow = '0 0 20px #00ff00';
+                });
+            } else {
+                // Rouge fluo
+                document.body.style.backgroundColor = '#ff0066';
+                document.body.style.color = '#ffffff';
+                document.body.style.filter = 'saturate(5) brightness(2)';
+                document.querySelectorAll('*').forEach(el => {
+                    el.style.backgroundColor = '#ff0066';
+                    el.style.color = '#ffffff';
+                    el.style.borderColor = '#ff0066';
+                    el.style.boxShadow = '0 0 50px #ff0066';
+                    el.style.textShadow = '0 0 20px #ff0066';
+                });
+            }
+            isGreen = !isGreen;
+        }, 200);
+        
+        // Arrêter après 10 secondes et restaurer
+        setTimeout(() => {
+            clearInterval(interval);
+            
+            // Restaurer les styles
+            document.body.style.backgroundColor = '';
+            document.body.style.color = '';
+            document.body.style.filter = '';
+            document.querySelectorAll('*').forEach(el => {
+                el.style.backgroundColor = '';
+                el.style.color = '';
+                el.style.borderColor = '';
+                el.style.boxShadow = '';
+                el.style.textShadow = '';
+            });
+            
+            this.ginModeActive = false;
+            console.log('HORRIBLE GIN MODE deactivated');
+            
+            // Recharger la page pour être sûr de tout restaurer
+            window.location.reload();
+        }, 10000);
     }
 }
 
