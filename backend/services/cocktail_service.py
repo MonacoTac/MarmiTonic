@@ -124,6 +124,10 @@ class CocktailService:
     def get_all_cocktails(self) -> List[Cocktail]:
         """Get all cocktails from local TTL data using SPARQL"""
         query = """
+        PREFIX dbo: <http://dbpedia.org/ontology/>
+        PREFIX dbp: <http://dbpedia.org/property/>
+        PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
         SELECT ?cocktail ?name ?desc ?image ?ingredients ?prep ?served ?garnish ?source WHERE {
             ?cocktail rdfs:label ?name .
             FILTER(LANG(?name) = "en")

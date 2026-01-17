@@ -61,8 +61,8 @@ class IBADataParser:
         
         try:
             print(f"Chargement du fichier TTL: {file_path}")
-            self.graph.parse(str(file_path), format="turtle")
-            print(f"✅ Chargé {len(self.graph)} triples")
+            self.graph.parse(str(file_path), format="turtle", encoding="utf-8")
+            print(f"Chargé {len(self.graph)} triples")
         except FileNotFoundError:
             print(f"❌ Fichier non trouvé: {file_path}")
             raise
