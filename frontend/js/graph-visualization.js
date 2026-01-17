@@ -433,6 +433,7 @@ class GraphVisualizationPage {
     }
 
     activateGinMode() {
+        // return; // désactive l'easter egg quand ça dérange
         console.log('activateGinMode called! Current state:', this.ginModeActive);
         
         if (this.ginModeActive) {
