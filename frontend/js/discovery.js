@@ -21,30 +21,6 @@
                 return [];
             }
         },
-        
-        add(cocktail) {
-            try {
-                let recent = this.get();
-                // Remove if already exists
-                recent = recent.filter(c => c.id !== cocktail.id);
-                // Add to front
-                recent.unshift({
-                    id: cocktail.id,
-                    name: cocktail.name,
-                    image: cocktail.image,
-                    timestamp: Date.now()
-                });
-                // Keep only max items
-                recent = recent.slice(0, this.maxItems);
-                localStorage.setItem(this.key, JSON.stringify(recent));
-            } catch (e) {
-                console.error('Error saving recently viewed:', e);
-            }
-        },
-        
-        clear() {
-            localStorage.removeItem(this.key);
-        }
     };
     
     /**
@@ -154,8 +130,10 @@
             `;
             return;
         }
-        
-        grid.innerHTML = recentCocktails.map(cocktail => `
+        // Show only the last 6 recently viewed items (most recent first)
+        const toShow = recentCocktails.slice(0, 6);
+
+        grid.innerHTML = toShow.map(cocktail => `
             <div class="recent-cocktail-card" data-cocktail-id="${cocktail.id}">
                 <img src="${getCocktailImage(cocktail)}" alt="${cocktail.name}" onerror="this.src='https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=300&h=300&fit=crop'">
                 <div class="recent-cocktail-info">
@@ -363,13 +341,10 @@
         }
         
         if (cocktail) {
-            // Add to recently viewed
-            RecentlyViewed.add(cocktail);
-            
             // Navigate to detail page (or open modal in future)
             // For now, just log and potentially redirect
             console.log('Navigate to cocktail detail:', cocktail);
-            
+
             window.location.href = `cocktail-detail.html?id=${cocktailId}`;
         }
     }
