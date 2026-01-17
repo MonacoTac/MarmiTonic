@@ -7,6 +7,7 @@ import os
 from ..models.cocktail import Cocktail
 from ..models.vibe_cluster import VibeCluster
 from .cocktail_service import CocktailService
+from .llm_service import LLMService
 from backend.models import cocktail
 
 
@@ -15,6 +16,7 @@ class SimilarityService:
     
     def __init__(self, model_name: str = "sentence-transformers/all-MiniLM-L6-v2"):
         self.cocktail_service = CocktailService()
+        self.llm_service = LLMService()
         self.model = SentenceTransformer(model_name)
         self.index: Optional[faiss.Index] = None
         self.cocktails: List[Cocktail] = []
@@ -144,6 +146,37 @@ class SimilarityService:
         query_text = f"Cocktail avec les ingrédients: {', '.join(ingredients)}"
         return self.find_similar_by_text(query_text, top_k)
     
+    def _generate_cluster_title(self, cocktails: List[Cocktail]) -> str:
+        """Generate a vibe/title for a cluster using LLM based on cocktail characteristics."""
+        # Create a summary of the cocktails in the cluster
+        cocktail_info = []
+        for cocktail in cocktails[:5]:  # Use top 5 closest cocktails
+            info_parts = [f"- {cocktail.name}"]
+            if cocktail.description:
+                info_parts.append(f": {cocktail.description[:100]}..." if len(cocktail.description) > 100 else f": {cocktail.description}")
+            if cocktail.ingredients:
+                ingredients_str = ", ".join(str(i) for i in cocktail.ingredients[:5])  # Limit to 5 ingredients
+                info_parts.append(f" (Ingredients: {ingredients_str})")
+            if cocktail.categories:
+                info_parts.append(f" [Categories: {', '.join(cocktail.categories[:3])}]")
+            cocktail_info.append("".join(info_parts))
+        
+        cocktails_text = "\n".join(cocktail_info)
+        
+        prompt = f"""Based on these cocktails, generate a short, catchy title (2-4 words) that captures the common vibe or theme of the group. The title should be evocative and creative, like "Tropical Paradise", "Classic Elegance", "Bold & Spicy", "Citrus Dreams", etc.
+                     Cocktails: 
+                     {cocktails_text}
+                     Respond with ONLY the title, nothing else."""
+        
+        try:
+            title = self.llm_service.example(prompt).strip()
+            # Remove quotes if present
+            title = title.strip('"').strip("'")
+            return title
+        except Exception as e:
+            print(f"Error generating cluster title: {e}")
+            return f"Cluster Vibe"
+    
     def create_cocktails_clusters(self, n_clusters: int = 6) -> Dict[int, VibeCluster]:
         """Regroupe les cocktails en clusters basés sur leurs embeddings."""
         if self.index is None or not self.cocktails:
@@ -199,19 +232,13 @@ class SimilarityService:
             # Convert centroid to Python list of floats
             cluster.center = centroids[cluster_id].tolist()
 
-        # find titles for clusters based on closest cocktails using ai model
         for cluster_id, cluster in clusters.items():
-            if cluster.closest_to_center:
-                descriptions = []
-                for cocktail_id in cluster.closest_to_center:
-                    cocktail = next((c for c in self.cocktails if c.id == cocktail_id), None)
-                    if cocktail and cocktail.description:
-                        descriptions.append(cocktail.description)
-                cluster_descriptions = f",".join(descriptions)
-                #cluster.title = TODO: generate title using ai model
-
-        # check if every cocktail is in a cluster
-        for (cluster_id, cluster) in clusters.items():
-            print(f"Cluster {cluster_id} has {len(cluster.cocktail_ids)} cocktails.")
+            closest_cocktails = [c for c in self.cocktails if c.id in cluster.closest_to_center[:5]]
+            if closest_cocktails:
+                cluster.title = self._generate_cluster_title(closest_cocktails)
+                print(f"Cluster {cluster_id}: '{cluster.title}' with {len(cluster.cocktail_ids)} cocktails.")
+            else:
+                cluster.title = f"Vibe {cluster_id}"
+                print(f"Cluster {cluster_id} has {len(cluster.cocktail_ids)} cocktails.")
 
         return clusters

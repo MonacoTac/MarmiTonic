@@ -179,3 +179,33 @@ async function buildSimilarityIndex(forceRebuild = false) {
         return { status: 'error', message: error.message };
     }
 }
+
+// Get a random cocktail
+async function fetchRandomCocktail() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/cocktails/random`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch random cocktail');
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching random cocktail:', error);
+        return null;
+    }
+}
+
+// Get vibe clusters with cocktails
+async function fetchVibeClusters(nClusters = 3) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/cocktails/clusters?n_clusters=${nClusters}&with_cocktails=true`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch vibe clusters');
+        }
+        const data = await response.json();
+        return data.clusters || [];
+    } catch (error) {
+        console.error('Error fetching vibe clusters:', error);
+        return [];
+    }
+}

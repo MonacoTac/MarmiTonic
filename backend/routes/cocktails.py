@@ -80,3 +80,46 @@ async def create_cocktail_clusters(n_clusters: int = Query(6, ge=2, le=20)):
         return {"status": "success", "n_clusters": n_clusters, "clusters": clusters_list}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error creating clusters: {str(e)}")
+
+@router.get("/random")
+async def get_random_cocktail():
+    """Get a random cocktail from the database"""
+    try:
+        import random
+        cocktails = cocktail_service.get_all_cocktails()
+        if not cocktails:
+            raise HTTPException(status_code=404, detail="No cocktails found")
+        return random.choice(cocktails)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting random cocktail: {str(e)}")
+
+@router.get("/clusters")
+async def get_cocktail_clusters(n_clusters: int = Query(6, ge=2, le=20), with_cocktails: bool = Query(True)):
+    """Get vibe clusters with full cocktail details"""
+    try:
+        # Generate clusters
+        clusters = similarity_service.create_cocktails_clusters(n_clusters=n_clusters)
+        
+        if not with_cocktails:
+            # Just return cluster metadata
+            return {"clusters": [cluster.dict() for cluster in clusters.values()]}
+        
+        # Enrich with full cocktail details
+        all_cocktails = cocktail_service.get_all_cocktails()
+        cocktails_dict = {c.id: c for c in all_cocktails}
+        
+        enriched_clusters = []
+        for cluster in clusters.values():
+            # Get full cocktail objects for this cluster
+            cluster_cocktails = [cocktails_dict[cid] for cid in cluster.cocktail_ids if cid in cocktails_dict]
+            
+            enriched_clusters.append({
+                "cluster_id": cluster.cluster_id,
+                "title": cluster.title or f"Vibe {cluster.cluster_id + 1}",
+                "cocktails": cluster_cocktails[:15],  # Limit to 15 cocktails per cluster for performance
+                "total_count": len(cluster.cocktail_ids)
+            })
+        
+        return {"clusters": enriched_clusters}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting clusters: {str(e)}")
