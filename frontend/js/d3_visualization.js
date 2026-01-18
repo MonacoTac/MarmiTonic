@@ -91,6 +91,8 @@ class D3DisjointForceGraph {
             .attr('fill', d => this.getNodeColor(d.type))
             .attr('stroke', '#fff')
             .attr('stroke-width', 1.5)
+            .style('cursor', d => d.type === 'cocktail' ? 'pointer' : 'default')
+            .on('click', (event, d) => this.handleNodeClick(event, d))
             .call(this.drag(this.simulation));
 
         // Add tooltips
@@ -157,6 +159,14 @@ class D3DisjointForceGraph {
             'default': '#76b7b2'
         };
         return colors[type] || colors.default;
+    }
+
+    handleNodeClick(event, d) {
+        console.log(`Node clicked: ${d.name} (${d.type})`);
+        if (d.type === 'cocktail' && d.id) {
+            console.log(`Navigating to cocktail detail page for ID: ${d.id}`);
+            window.location.href = `cocktail-detail.html?id=${d.id}`;
+        }
     }
 
     // Disjoint graph specific methods

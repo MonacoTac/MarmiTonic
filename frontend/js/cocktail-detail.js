@@ -3,6 +3,44 @@
 let marmitonicUserId = null;
 let currentCocktail = null;
 
+// Recently Viewed management (mirrors discovery.js behavior)
+const RecentlyViewed = {
+    key: 'marmitonic_recently_viewed',
+    maxItems: 12,
+
+    get() {
+        try {
+            const data = localStorage.getItem(this.key);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error('Error loading recently viewed:', e);
+            return [];
+        }
+    },
+
+    add(cocktail) {
+        try {
+            if (!cocktail || !cocktail.id) return;
+            let recent = this.get();
+            recent = recent.filter(c => c.id !== cocktail.id);
+            recent.unshift({
+                id: cocktail.id,
+                name: cocktail.name,
+                image: cocktail.image,
+                timestamp: Date.now()
+            });
+            recent = recent.slice(0, this.maxItems);
+            localStorage.setItem(this.key, JSON.stringify(recent));
+        } catch (e) {
+            console.error('Error saving recently viewed:', e);
+        }
+    },
+
+    clear() {
+        localStorage.removeItem(this.key);
+    }
+};
+
 // User ID handling
 function getOrCreateUserId() {
     const key = 'marmitonic_user_id';
@@ -297,6 +335,12 @@ async function loadCocktailData(cocktailId) {
         if (cocktail) {
             currentCocktail = cocktail;
             populateCocktailData(cocktail);
+            // Save to recently viewed so detail page records visits from anywhere
+            try {
+                RecentlyViewed.add({ id: cocktail.id, name: cocktail.name, image: cocktail.image });
+            } catch (e) {
+                console.error('Error adding to recently viewed:', e);
+            }
         } else {
             showNotification('Cocktail non trouvé', 'error');
             setTimeout(() => window.location.href = 'discovery.html', 2000);
@@ -434,7 +478,7 @@ function createSimilarCocktailCard(cocktail, sharedCount, totalIngredients) {
         <img src="${imageUrl}" alt="${cocktail.name}">
         <div class="similar-info">
             <h4>${cocktail.name}</h4>
-            <span class="similar-meta">${sharedCount}/${totalIngredients} ingrédients</span>
+            <span class="similar-meta">${sharedCount}/${totalIngredients} ingrédients similaires</span>
         </div>
     `;
     

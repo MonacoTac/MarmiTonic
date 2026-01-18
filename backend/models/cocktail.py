@@ -20,6 +20,7 @@ class Cocktail(BaseModel):
     related_ingredients: Optional[List[str]] = Field(None, description="Related ingredients and concepts")
     labels: Optional[Dict[str, str]] = Field(None, description="Multilingual labels")
     descriptions: Optional[Dict[str, str]] = Field(None, description="Multilingual descriptions")
+    vibe_id: Optional[int] = Field(None, description="Associated Vibe ID")
 
     model_config = ConfigDict(
         json_encoders = {

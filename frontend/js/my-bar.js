@@ -349,6 +349,7 @@
     function createCocktailCard(cocktail) {
         const div = document.createElement('div');
         div.className = `my-bar-cocktail-card ${cocktail.canMake ? 'can-make' : 'almost-make'}`;
+        div.style.cursor = 'pointer';
         
         const missingText = cocktail.canMake 
             ? '<span class="badge-success">Tous les ingrédients disponibles !</span>'
@@ -366,6 +367,11 @@
             </div>
             </div>
         `;
+        
+        div.addEventListener('click', () => {
+            const cocktailId = cocktail.id || encodeURIComponent(cocktail.name);
+            window.location.href = `cocktail-detail.html?id=${cocktailId}`;
+        });
         
         return div;
     }
