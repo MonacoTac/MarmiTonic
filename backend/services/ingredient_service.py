@@ -109,7 +109,7 @@ class IngredientService:
         query_lower = query.lower()
         
         try:
-            all_local = get_local_ingredients()
+            all_local = self._local_ingredient_loader()
             for ing in all_local:
                 if query_lower in ing.name.lower():
                     local_matches.append(ing)

@@ -56,7 +56,7 @@ def cocktail_service(mock_cocktails):
 def test_search_cocktails(cocktail_service):
     results = cocktail_service.search_cocktails("Mojito")
     assert len(results) == 1
-    assert results[0].name == "Mojito"+
+    assert results[0].name == "Mojito"
 
     results = cocktail_service.search_cocktails("rum")
     # Mojito and Daiquiri contain rum, but search usually checks name/alt names. 

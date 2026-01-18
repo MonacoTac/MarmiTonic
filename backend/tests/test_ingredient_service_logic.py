@@ -25,6 +25,8 @@ def ingredient_service():
         # Replace sparql service with a mock
         service.sparql_service = MagicMock()
         service.sparql_service.execute_query = MagicMock()
+        # Also ensure that _local_ingredient_loader is properly mocked
+        service._local_ingredient_loader = MagicMock(return_value=[])
         return service
 
 def test_inventory_management(ingredient_service):

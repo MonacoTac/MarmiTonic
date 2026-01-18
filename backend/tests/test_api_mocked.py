@@ -1,4 +1,3 @@
-
 import pytest
 from unittest.mock import MagicMock, patch
 from fastapi.testclient import TestClient
@@ -24,11 +23,10 @@ mock_ingredient = Ingredient(
 )
 
 # Test Cocktails Routes
-@patch("backend.routes.cocktails.CocktailService")
-def test_get_cocktails(MockService):
-    mock_instance = MockService.return_value
-    mock_instance.get_all_cocktails.return_value = [mock_cocktail]
-    mock_instance.search_cocktails.return_value = [mock_cocktail]
+@patch("backend.routes.cocktails.cocktail_service")
+def test_get_cocktails(mock_service):
+    mock_service.get_all_cocktails.return_value = [mock_cocktail]
+    mock_service.search_cocktails.return_value = [mock_cocktail]
 
     # Test list
     response = client.get("/cocktails/")
@@ -40,22 +38,20 @@ def test_get_cocktails(MockService):
     response = client.get("/cocktails/?q=mojito")
     assert response.status_code == 200
     assert len(response.json()) == 1
-    mock_instance.search_cocktails.assert_called_with("mojito")
+    mock_service.search_cocktails.assert_called_with("mojito")
 
-@patch("backend.routes.cocktails.CocktailService")
-def test_get_feasible_cocktails(MockService):
-    mock_instance = MockService.return_value
-    mock_instance.get_feasible_cocktails.return_value = [mock_cocktail]
+@patch("backend.routes.cocktails.cocktail_service")
+def test_get_feasible_cocktails(mock_service):
+    mock_service.get_feasible_cocktails.return_value = [mock_cocktail]
 
     response = client.get("/cocktails/feasible/user1")
     assert response.status_code == 200
     assert len(response.json()) == 1
-    mock_instance.get_feasible_cocktails.assert_called_with("user1")
+    mock_service.get_feasible_cocktails.assert_called_with("user1")
 
-@patch("backend.routes.cocktails.CocktailService")
-def test_get_almost_feasible_cocktails(MockService):
-    mock_instance = MockService.return_value
-    mock_instance.get_almost_feasible_cocktails.return_value = [
+@patch("backend.routes.cocktails.cocktail_service")
+def test_get_almost_feasible_cocktails(mock_service):
+    mock_service.get_almost_feasible_cocktails.return_value = [
         {"cocktail": mock_cocktail, "missing": ["Sugar"]}
     ]
 
@@ -66,24 +62,22 @@ def test_get_almost_feasible_cocktails(MockService):
     assert data[0]["cocktail"]["name"] == "Mojito"
     assert "Sugar" in data[0]["missing"]
 
-@patch("backend.routes.cocktails.CocktailService")
-def test_get_cocktails_by_ingredients(MockService):
-    mock_instance = MockService.return_value
-    mock_instance.get_cocktails_by_ingredients.return_value = [mock_cocktail]
+@patch("backend.routes.cocktails.cocktail_service")
+def test_get_cocktails_by_ingredients(mock_service):
+    mock_service.get_cocktails_by_ingredients.return_value = [mock_cocktail]
 
     response = client.get("/cocktails/by-ingredients", params={"ingredients": ["Rum", "Mint"]})
     assert response.status_code == 200
     assert len(response.json()) == 1
-    mock_instance.get_cocktails_by_ingredients.assert_called_with(["Rum", "Mint"])
+    mock_service.get_cocktails_by_ingredients.assert_called_with(["Rum", "Mint"])
 
-@patch("backend.routes.cocktails.CocktailService")
-def test_get_similar_cocktails(MockService):
-    mock_instance = MockService.return_value
-    mock_instance.get_similar_cocktails.return_value = [{"cocktail": mock_cocktail, "similarity_score": 0.9}]
+@patch("backend.routes.cocktails.similarity_service")
+def test_get_similar_cocktails(mock_service):
+    mock_service.find_similar_cocktails.return_value = [{"cocktail": mock_cocktail, "similarity_score": 0.9}]
 
     response = client.get("/cocktails/similar/mojito")
     assert response.status_code == 200
-    assert response.json()[0]["cocktail"]["name"] == "Mojito"
+    assert response.json()["similar_cocktails"][0]["cocktail"]["name"] == "Mojito"
 
 # Test Ingredients Routes
 @patch("backend.routes.ingredients.service")

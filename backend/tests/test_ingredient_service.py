@@ -11,8 +11,12 @@ from services.ingredient_service import IngredientService
 
 @pytest.fixture
 def ingredient_service():
+    # Create a mock for the local ingredient loader
+    mock_local_loader = Mock()
+    mock_local_loader.return_value = []
+    
     with patch('services.ingredient_service.SparqlService'):
-        service = IngredientService()
+        service = IngredientService(local_ingredient_loader=mock_local_loader)
         return service
 
 
