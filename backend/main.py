@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .routes import cocktails, ingredients, planner, insights, llm
-from .routes.graphs import router as graphs
-from .utils.front_server import start_frontend_server_once
-from .utils.graph_loader import get_shared_graph
+from backend.routes import cocktails, ingredients, planner, insights, llm
+from backend.routes.graphs import router as graphs
+from backend.utils.front_server import start_frontend_server_once
+from backend.utils.graph_loader import get_shared_graph
 from rdflib import Graph
 from pathlib import Path
 

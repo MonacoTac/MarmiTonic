@@ -1,16 +1,30 @@
 
 import pytest
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
-from backend.services.ingredient_service import IngredientService
-from backend.models.ingredient import Ingredient
+
+# Add backend directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from services.ingredient_service import IngredientService
+from models.ingredient import Ingredient
 
 @pytest.fixture
 def ingredient_service():
-    with patch("backend.services.ingredient_service.SparqlService"), \
-         patch("backend.services.ingredient_service.get_shared_graph"), \
-         patch("backend.services.ingredient_service.get_local_ingredients"):
+    # Patch get_local_ingredients first
+    with patch("backend.services.ingredient_service.get_local_ingredients") as mock_get_local,\
+         patch("backend.services.ingredient_service.SparqlService") as mock_sparql,\
+         patch("backend.services.ingredient_service.get_shared_graph"):
+        
+        # Set default return value for get_local_ingredients
+        mock_get_local.return_value = []
         
         service = IngredientService()
+        
+        # Replace sparql service with a mock
+        service.sparql_service = MagicMock()
+        service.sparql_service.execute_query = MagicMock()
         return service
 
 def test_inventory_management(ingredient_service):
@@ -43,19 +57,22 @@ def test_inventory_management(ingredient_service):
     ingredient_service.clear_inventory(user_id)
     assert ingredient_service.get_inventory(user_id) == []
 
-def test_get_all_ingredients(ingredient_service):
-    # Mock local ingredients
+def test_get_all_ingredients():
+    # Create a test ingredient service with a custom local ingredient loader
     mock_local = [
         Ingredient(id="1", name="Rum"),
         Ingredient(id="2", name="Gin")
     ]
     
-    with patch("backend.services.ingredient_service.get_local_ingredients", return_value=mock_local):
-        ingredients = ingredient_service.get_all_ingredients()
-        assert len(ingredients) >= 2
-        names = [i.name for i in ingredients]
-        assert "Rum" in names
-        assert "Gin" in names
+    test_service = IngredientService(lambda: mock_local)
+    test_service.sparql_service = MagicMock()
+    test_service.sparql_service.execute_query.return_value = {"results": {"bindings": []}}
+    
+    ingredients = test_service.get_all_ingredients()
+    assert len(ingredients) == 2
+    names = [i.name for i in ingredients]
+    assert "Rum" in names
+    assert "Gin" in names
 
 def test_get_ingredient_by_id_local(ingredient_service):
     # Mock _query_local_ingredient

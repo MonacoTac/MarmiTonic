@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Query, Body
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel
-from ..services.graph_service import GraphService
+from backend.services.graph_service import GraphService
 
 router = APIRouter()
 

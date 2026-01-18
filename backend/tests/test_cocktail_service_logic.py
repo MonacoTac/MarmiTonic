@@ -1,8 +1,14 @@
 
 import pytest
+import sys
+from pathlib import Path
 from unittest.mock import MagicMock, patch
-from backend.services.cocktail_service import CocktailService
-from backend.models.cocktail import Cocktail
+
+# Add backend directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+from services.cocktail_service import CocktailService
+from models.cocktail import Cocktail
 
 @pytest.fixture
 def mock_cocktails():
@@ -50,7 +56,7 @@ def cocktail_service(mock_cocktails):
 def test_search_cocktails(cocktail_service):
     results = cocktail_service.search_cocktails("Mojito")
     assert len(results) == 1
-    assert results[0].name == "Mojito"
+    assert results[0].name == "Mojito"+
 
     results = cocktail_service.search_cocktails("rum")
     # Mojito and Daiquiri contain rum, but search usually checks name/alt names. 

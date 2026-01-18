@@ -14,9 +14,9 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from main import app
-from models.cocktail import Cocktail
-from models.ingredient import Ingredient
+from backend.main import app
+from backend.models.cocktail import Cocktail
+from backend.models.ingredient import Ingredient
 
 
 @pytest.fixture
@@ -73,7 +73,7 @@ def sample_ingredients():
 class TestBarOptimizationWorkflow:
     """Test the complete 'Bar Optimization' feature workflow"""
 
-    @patch('routes.planner.service')
+    @patch('backend.routes.planner.service')
     def test_playlist_mode_workflow(self, mock_planner_service, client):
         """
         Test Playlist Mode optimization:
@@ -99,7 +99,7 @@ class TestBarOptimizationWorkflow:
 class TestDiscoveryWorkflow:
     """Test the complete 'Discovery' feature workflow"""
 
-    @patch('routes.cocktails.CocktailService')
+    @patch('backend.routes.cocktails.CocktailService')
     def test_discovery_workflow(self, mock_cocktail_service, client, sample_cocktails):
         """
         Test Discovery features:
@@ -147,7 +147,7 @@ class TestDiscoveryWorkflow:
 class TestInsightsWorkflow:
     """Test the complete 'Insights' feature workflow"""
 
-    @patch('routes.insights.GraphService')
+    @patch('backend.routes.insights.GraphService')
     def test_insights_workflow(self, mock_graph_service, client):
         """
         Test Insights features:
@@ -214,8 +214,8 @@ class TestInsightsWorkflow:
 class TestEndToEndScenarios:
     """Test realistic end-to-end user scenarios"""
 
-    @patch('routes.cocktails.CocktailService')
-    @patch('routes.insights.GraphService')
+    @patch('backend.routes.cocktails.CocktailService')
+    @patch('backend.routes.insights.GraphService')
     def test_cocktail_exploration_scenario(self, mock_graph_service, mock_cocktail_service, 
                                           client, sample_cocktails):
         """
@@ -262,7 +262,7 @@ class TestEndToEndScenarios:
 class TestErrorRecoveryWorkflows:
     """Test error handling and recovery in workflows"""
 
-    @patch('routes.cocktails.CocktailService')
+    @patch('backend.routes.cocktails.CocktailService')
     def test_service_failure_recovery(self, mock_cocktail_service, client):
         """
         Test that API gracefully handles service failures

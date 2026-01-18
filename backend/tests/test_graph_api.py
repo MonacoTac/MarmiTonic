@@ -12,9 +12,9 @@ try:
 except ImportError:
     # Fallback for other environments
     sys.path.insert(0, str(Path(__file__).parent.parent))
-    from main import app
-    from models.cocktail import Cocktail
-    from models.ingredient import Ingredient
+    from backend.main import app
+    from backend.models.cocktail import Cocktail
+    from backend.models.ingredient import Ingredient
 
 @pytest.fixture
 def client():

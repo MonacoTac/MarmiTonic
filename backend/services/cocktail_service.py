@@ -1,6 +1,6 @@
-from .sparql_service import SparqlService
-from .ingredient_service import IngredientService
-from ..models.cocktail import Cocktail
+from backend.services.sparql_service import SparqlService
+from backend.services.ingredient_service import IngredientService
+from backend.models.cocktail import Cocktail
 from typing import List, Dict, Any
 import rdflib
 from rdflib import Graph, URIRef, Literal
@@ -9,7 +9,7 @@ from collections import defaultdict
 import re
 
 from pathlib import Path
-from ..utils.graph_loader import get_shared_graph
+from backend.utils.graph_loader import get_shared_graph
 
 # Define namespaces
 DBO = rdflib.Namespace("http://dbpedia.org/ontology/")
@@ -240,11 +240,11 @@ class CocktailService:
 
         for line in lines:
             line = line.strip()
-            if line.startswith("*") or line.startswith("•"):
+            if line.startswith("*") or line.startswith("•") or line.startswith("-"):
                 # Remove the bullet and any quantities
                 clean_line = line[1:].strip()
-                # Remove quantities like "45 ml", "15 ml", etc.
-                clean_line = re.sub(r'^\d+\s*(ml|cl|oz|dash|barspoon|tsp|teaspoon|tablespoon)\s*', '', clean_line, flags=re.IGNORECASE)
+                # Remove quantities like "45 ml", "15 ml", "2 dashes", etc.
+                clean_line = re.sub(r'^\d+\s*(ml|cl|oz|dashes|dash|barspoon|tsp|teaspoon|tablespoon|tbsp|drops|drop|splash|pieces|piece|cubes|cube|slices|slice)\s*', '', clean_line, flags=re.IGNORECASE)
                 clean_line = clean_line.strip()
                 if clean_line:
                     ingredient_names.append(clean_line)
@@ -327,7 +327,7 @@ class CocktailService:
 
     def get_same_vibe_cocktails(self, cocktail_id: str, limit: int = 10) -> List[Cocktail]:
         """Get cocktails in the same graph community/cluster as the given cocktail"""
-        from .graph_service import GraphService  # Import locally to avoid circular imports
+        from services.graph_service import GraphService  # Import locally to avoid circular imports
 
         all_cocktails = self.get_all_cocktails()
 
@@ -343,55 +343,71 @@ class CocktailService:
 
         # Get graph analysis with communities
         graph_service = GraphService()
-        analysis = graph_service.analyze_graph()
-        communities = analysis.get('communities', {})
+        try:
+            graph_data = graph_service.build_graph()
+            analysis = graph_service.analyze_graph(graph_data)
+            if not analysis:
+                return []
+                
+            communities = analysis.get('communities', {})
 
-        # Find the community of the target cocktail
-        target_community = None
-        for node, community_id in communities.items():
-            if node == target_cocktail.name:
-                target_community = community_id
-                break
+            # Find the community of the target cocktail
+            target_community = None
+            for node, community_id in communities.items():
+                if node == target_cocktail.name:
+                    target_community = community_id
+                    break
 
-        if target_community is None:
+            if target_community is None:
+                return []
+
+            # Find all cocktails in the same community
+            same_vibe_cocktails = []
+            for cocktail in all_cocktails:
+                if cocktail.id != cocktail_id and cocktail.name in communities:
+                    if communities[cocktail.name] == target_community:
+                        same_vibe_cocktails.append(cocktail)
+
+            # Return up to limit cocktails
+            return same_vibe_cocktails[:limit]
+        except Exception as e:
+            print(f"Error getting same vibe cocktails: {e}")
             return []
-
-        # Find all cocktails in the same community
-        same_vibe_cocktails = []
-        for cocktail in all_cocktails:
-            if cocktail.id != cocktail_id and cocktail.name in communities:
-                if communities[cocktail.name] == target_community:
-                    same_vibe_cocktails.append(cocktail)
-
-        # Return up to limit cocktails
-        return same_vibe_cocktails[:limit]
 
     def get_bridge_cocktails(self, limit: int = 10) -> List[Cocktail]:
         """Get cocktails that connect different communities (bridge cocktails)"""
-        from .graph_service import GraphService  # Import locally to avoid circular imports
+        from services.graph_service import GraphService  # Import locally to avoid circular imports
 
         all_cocktails = self.get_all_cocktails()
 
         # Get graph analysis with communities
         graph_service = GraphService()
-        analysis = graph_service.analyze_graph()
-        communities = analysis.get('communities', {})
+        try:
+            graph_data = graph_service.build_graph()
+            analysis = graph_service.analyze_graph(graph_data)
+            if not analysis:
+                return []
+                
+            communities = analysis.get('communities', {})
 
-        bridge_cocktails = []
+            bridge_cocktails = []
 
-        for cocktail in all_cocktails:
-            if not cocktail.parsed_ingredients:
-                continue
+            for cocktail in all_cocktails:
+                if not cocktail.parsed_ingredients:
+                    continue
 
-            # Collect communities of ingredients used in this cocktail
-            ingredient_communities = set()
-            for ingredient_name in cocktail.parsed_ingredients:
-                if ingredient_name in communities:
-                    ingredient_communities.add(communities[ingredient_name])
+                # Collect communities of ingredients used in this cocktail
+                ingredient_communities = set()
+                for ingredient_name in cocktail.parsed_ingredients:
+                    if ingredient_name in communities:
+                        ingredient_communities.add(communities[ingredient_name])
 
-            # If ingredients span more than one community, it's a bridge cocktail
-            if len(ingredient_communities) > 1:
-                bridge_cocktails.append(cocktail)
+                # If ingredients span more than one community, it's a bridge cocktail
+                if len(ingredient_communities) > 1:
+                    bridge_cocktails.append(cocktail)
 
-        # Return up to limit bridge cocktails
-        return bridge_cocktails[:limit]
+            # Return up to limit bridge cocktails
+            return bridge_cocktails[:limit]
+        except Exception as e:
+            print(f"Error getting bridge cocktails: {e}")
+            return []

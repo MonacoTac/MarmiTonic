@@ -8,8 +8,8 @@ import sys
 from pathlib import Path
 
 # Importer le parser IBA
-from ..data.ttl_parser import IBADataParser
-from ..utils.graph_loader import get_shared_graph
+from backend.data.ttl_parser import IBADataParser
+from backend.utils.graph_loader import get_shared_graph
 
 class SparqlService:
     _shared_parser = None

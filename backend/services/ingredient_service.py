@@ -1,21 +1,26 @@
-from .sparql_service import SparqlService
-from ..models.ingredient import Ingredient
+
+from backend.services.sparql_service import SparqlService
+from backend.models.ingredient import Ingredient
 from typing import List, Dict
 from pathlib import Path
-from ..utils.graph_loader import get_shared_graph
-from ..data.ttl_parser import get_all_ingredients as get_local_ingredients
+from backend.utils.graph_loader import get_shared_graph
+from backend.data.ttl_parser import get_all_ingredients as get_local_ingredients
 
 class IngredientService:
-    def __init__(self):
+    def __init__(self, local_ingredient_loader=None):
         # SparqlService now defaults to using the shared graph
         self.sparql_service = SparqlService()
         self.inventories: Dict[str, List[str]] = {}  # user_id -> list of ingredient names
+        if local_ingredient_loader:
+            self._local_ingredient_loader = local_ingredient_loader
+        else:
+            self._local_ingredient_loader = get_local_ingredients
 
     def get_all_ingredients(self) -> List[Ingredient]:
         # First, load parsed ingredients from the local TTL parser
         ingredients = []
         try:
-            local_ings = get_local_ingredients()
+            local_ings = self._local_ingredient_loader()
             if local_ings:
                 ingredients.extend(local_ings)
         except Exception:
@@ -41,7 +46,7 @@ class IngredientService:
                         ingredient = Ingredient(
                             id=uri,
                             name=result["name"]["value"],
-                            category=result.get("category", {}).get("value", "Unknown"),
+                            categories=[result.get("category", {}).get("value", "Unknown")] if result.get("category") else None,
                             description=result.get("description", {}).get("value")
                         )
                         ingredients.append(ingredient)
