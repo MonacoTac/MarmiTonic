@@ -56,11 +56,9 @@ def mock_ingredient():
 class TestCocktailsEndpoints:
     """Test cocktails API endpoints"""
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_all_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_all_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_all_cocktails.return_value = [mock_cocktail]
 
         response = client.get("/cocktails/")
@@ -70,11 +68,9 @@ class TestCocktailsEndpoints:
         assert len(data) == 1
         assert data[0]["name"] == "Mojito"
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_search_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_search_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/?q=query"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.search_cocktails.return_value = [mock_cocktail]
 
         response = client.get("/cocktails/?q=Mojito")
@@ -84,11 +80,9 @@ class TestCocktailsEndpoints:
         assert len(data) == 1
         assert data[0]["name"] == "Mojito"
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_cocktails_empty_result(self, mock_service_class, client):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_cocktails_empty_result(self, mock_service, client):
         """Test GET /cocktails/ with no results"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_all_cocktails.return_value = []
 
         response = client.get("/cocktails/")
@@ -96,11 +90,9 @@ class TestCocktailsEndpoints:
         assert response.status_code == 200
         assert response.json() == []
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_cocktails_service_error(self, mock_service_class, client):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_cocktails_service_error(self, mock_service, client):
         """Test GET /cocktails/ with service error"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_all_cocktails.side_effect = Exception("Service error")
 
         response = client.get("/cocktails/")
@@ -108,11 +100,9 @@ class TestCocktailsEndpoints:
         assert response.status_code == 500
         assert "Service error" in response.json()["detail"]
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_feasible_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_feasible_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/feasible/{user_id}"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_feasible_cocktails.return_value = [mock_cocktail]
 
         response = client.get("/cocktails/feasible/user123")
@@ -122,11 +112,9 @@ class TestCocktailsEndpoints:
         assert len(data) == 1
         assert data[0]["name"] == "Mojito"
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_feasible_cocktails_error(self, mock_service_class, client):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_feasible_cocktails_error(self, mock_service, client):
         """Test GET /cocktails/feasible/{user_id} with error"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_feasible_cocktails.side_effect = Exception("Inventory error")
 
         response = client.get("/cocktails/feasible/user123")
@@ -134,11 +122,9 @@ class TestCocktailsEndpoints:
         assert response.status_code == 400
         assert "Invalid user_id or query failure" in response.json()["detail"]
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_almost_feasible_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_almost_feasible_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/almost-feasible/{user_id}"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_almost_feasible_cocktails.return_value = [
             {"cocktail": mock_cocktail, "missing": ["Mint"]}
         ]
@@ -150,11 +136,9 @@ class TestCocktailsEndpoints:
         assert len(data) == 1
         assert data[0]["missing"] == ["Mint"]
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_cocktails_by_ingredients(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_cocktails_by_ingredients(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/by-ingredients?ingredients="""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_cocktails_by_ingredients.return_value = [mock_cocktail]
 
         response = client.get("/cocktails/by-ingredients?ingredients=Rum&ingredients=Lime")
@@ -164,18 +148,16 @@ class TestCocktailsEndpoints:
         assert len(data) == 1
         assert data[0]["name"] == "Mojito"
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_cocktails_by_ingredients_no_params(self, mock_service_class, client):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_cocktails_by_ingredients_no_params(self, mock_service, client):
         """Test GET /cocktails/by-ingredients without parameters"""
         response = client.get("/cocktails/by-ingredients")
         
         assert response.status_code == 422  # Validation error
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_cocktails_by_uris(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_cocktails_by_uris(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/by-uris?uris="""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_cocktails_by_uris.return_value = [mock_cocktail]
 
         response = client.get("/cocktails/by-uris?uris=http://example.com/Rum")
@@ -184,12 +166,10 @@ class TestCocktailsEndpoints:
         data = response.json()
         assert len(data) == 1
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_similar_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.similarity_service')
+    def test_get_similar_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/similar/{cocktail_id}"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
-        mock_service.get_similar_cocktails.return_value = [
+        mock_service.find_similar_cocktails.return_value = [
             {"cocktail": mock_cocktail, "similarity_score": 0.75}
         ]
 
@@ -197,39 +177,39 @@ class TestCocktailsEndpoints:
         
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        assert data[0]["similarity_score"] == 0.75
+        assert len(data["similar_cocktails"]) == 1
+        assert data["similar_cocktails"][0]["similarity_score"] == 0.75
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_similar_cocktails_with_limit(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.similarity_service')
+    def test_get_similar_cocktails_with_limit(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/similar/{cocktail_id}?limit=5"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
-        mock_service.get_similar_cocktails.return_value = []
+        mock_service.find_similar_cocktails.return_value = []
 
         response = client.get("/cocktails/similar/mojito?limit=5")
         
         assert response.status_code == 200
-        mock_service.get_similar_cocktails.assert_called_once_with("mojito", 5)
+        mock_service.find_similar_cocktails.assert_called_once_with("mojito", top_k=5)
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_same_vibe_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_same_vibe_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/same-vibe/{cocktail_id}"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
+        # Set return value for get_same_vibe_cocktails
         mock_service.get_same_vibe_cocktails.return_value = [mock_cocktail]
 
+        # Make the request
         response = client.get("/cocktails/same-vibe/mojito")
         
+        # Verify response
         assert response.status_code == 200
         data = response.json()
         assert len(data) == 1
+        
+        # Verify the method was called correctly
+        mock_service.get_same_vibe_cocktails.assert_called_once_with("mojito", limit=10)
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_bridge_cocktails(self, mock_service_class, client, mock_cocktail):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_bridge_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/bridge"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_bridge_cocktails.return_value = [mock_cocktail]
 
         response = client.get("/cocktails/bridge")
@@ -238,17 +218,15 @@ class TestCocktailsEndpoints:
         data = response.json()
         assert len(data) == 1
 
-    @patch('backend.routes.cocktails.CocktailService')
-    def test_get_bridge_cocktails_with_limit(self, mock_service_class, client):
+    @patch('backend.routes.cocktails.cocktail_service')
+    def test_get_bridge_cocktails_with_limit(self, mock_service, client):
         """Test GET /cocktails/bridge?limit=20"""
-        mock_service = Mock()
-        mock_service_class.return_value = mock_service
         mock_service.get_bridge_cocktails.return_value = []
 
         response = client.get("/cocktails/bridge?limit=20")
         
         assert response.status_code == 200
-        mock_service.get_bridge_cocktails.assert_called_once_with(20)
+        mock_service.get_bridge_cocktails.assert_called_once_with(limit=20)
 
 
 class TestIngredientsEndpoints:

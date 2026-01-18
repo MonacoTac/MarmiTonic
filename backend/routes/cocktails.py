@@ -31,18 +31,25 @@ async def get_almost_feasible_cocktails(user_id: str):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid user_id or query failure: {str(e)}")
 
+@router.get("/by-ingredients")
+async def get_cocktails_by_ingredients(ingredients: List[str] = Query(..., description="List of ingredient names to search for")):
+    try:
+        return cocktail_service.get_cocktails_by_ingredients(ingredients)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/by-uris")
 async def get_cocktails_by_uris(uris: List[str] = Query(..., description="List of ingredient URIs to search for")):
     try:
-        return cocktail_service.get_cocktails_by_ingredient_uris(uris)
+        return cocktail_service.get_cocktails_by_uris(uris)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
 # similarity endpoints
 @router.get("/similar/{cocktail_id}")
-async def get_similar_cocktails(cocktail_id: str, top_k: int = Query(5, ge=1, le=20)):
+async def get_similar_cocktails(cocktail_id: str, limit: int = Query(5, ge=1, le=20)):
     try:
-        results = similarity_service.find_similar_cocktails(cocktail_id, top_k=top_k)
+        results = similarity_service.find_similar_cocktails(cocktail_id, top_k=limit)
         return {"cocktail_id": cocktail_id, "similar_cocktails": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error finding similar cocktails: {str(e)}")
@@ -123,3 +130,19 @@ async def get_cocktail_clusters(n_clusters: int = Query(6, ge=2, le=20), with_co
         return {"clusters": enriched_clusters}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting clusters: {str(e)}")
+
+@router.get("/same-vibe/{cocktail_id}")
+async def get_same_vibe_cocktails(cocktail_id: str, limit: int = Query(10, ge=1, le=50)):
+    """Get cocktails in the same graph community/cluster as the given cocktail"""
+    try:
+        return cocktail_service.get_same_vibe_cocktails(cocktail_id, limit=limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error finding same vibe cocktails: {str(e)}")
+
+@router.get("/bridge")
+async def get_bridge_cocktails(limit: int = Query(10, ge=1, le=50)):
+    """Get bridge cocktails that connect different communities"""
+    try:
+        return cocktail_service.get_bridge_cocktails(limit=limit)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting bridge cocktails: {str(e)}")
