@@ -33,7 +33,7 @@ class SparqlService:
         return self.execute_local_query(query)
 
     def execute_local_query(self, query: str):
-        """Execute SPARQL query on local RDF graph"""
+        """Execute SPARQL query on local RDF graph - returns direct Python list"""
         print(f"DEBUG: execute_local_query called")
         if self.local_graph is None:
             print("DEBUG: Local graph not loaded")
@@ -44,25 +44,22 @@ class SparqlService:
             # Execute query on local graph
             result = self.local_graph.query(query)
 
-            # Convert to SPARQL results JSON format
-            bindings = []
+            # Convert directly to Python list of dicts
+            rows = []
             for row in result:
-                binding = {}
+                row_dict = {}
                 for var, value in zip(result.vars, row):
                     if value is not None:
-                        if hasattr(value, 'n3'):
-                            binding[str(var)] = {"value": str(value), "type": "uri" if isinstance(value, URIRef) else "literal"}
-                        else:
-                            binding[str(var)] = {"value": str(value), "type": "literal"}
+                        row_dict[str(var)] = {
+                            "value": str(value),
+                            "type": "uri" if isinstance(value, URIRef) else "literal"
+                        }
                     else:
-                        binding[str(var)] = {"value": None}
-                bindings.append(binding)
+                        row_dict[str(var)] = {"value": None, "type": "literal"}
+                rows.append(row_dict)
 
-            print(f"DEBUG: Query executed successfully, {len(bindings)} results")
-            return {
-                "head": {"vars": [str(var) for var in result.vars]},
-                "results": {"bindings": bindings}
-            }
+            print(f"DEBUG: Query executed successfully, {len(rows)} results")
+            return rows
         except Exception as e:
             print(f"DEBUG: Error executing local SPARQL query: {e}")
             return None

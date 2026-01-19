@@ -27,10 +27,9 @@ class TestSparqlService:
         # Test that execute_query redirects to execute_local_query
         query = 'SELECT ?s WHERE { ?s ?p ?o } LIMIT 1'
         result = sparql_service.execute_query(query)
-        # Should return same as execute_local_query
+        # Should return same as execute_local_query (list format)
         assert result is not None
-        assert 'results' in result
-        assert 'bindings' in result['results']
+        assert isinstance(result, list)
 
     def test_execute_query_invalid_syntax(self, sparql_service):
         # Test with invalid SPARQL syntax
@@ -53,7 +52,9 @@ class TestSparqlService:
         result = sparql_service.execute_local_query('SELECT * WHERE { ?s ?p ?o }')
 
         assert result is not None
-        assert result['results']['bindings'][0]['test']['value'] == 'local_value'
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0]['test']['value'] == 'local_value'
 
     def test_execute_local_query_error(self, sparql_service):
         mock_graph = Mock()
@@ -90,4 +91,6 @@ class TestSparqlService:
         result = sparql_service.query_local_data('cocktail', uri='http://example.com/c1')
 
         assert result is not None
-        assert 'results' in result
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0]['property']['value'] == 'http://purl.org/dc/terms/title'

@@ -88,22 +88,20 @@ class GraphService:
             if not query:
                 raise ValueError("No SPARQL query provided")
             
-            final_results = self.sparql_service.execute_local_query(query)
+            rows = self.sparql_service.execute_local_query(query)
             
-            if not final_results or 'results' not in final_results or 'bindings' not in final_results['results']:
+            if not rows:
                 return None
             
             # Build graph from query results
             nodes = {}
             edges = []
             
-            bindings = final_results['results']['bindings']
-            
             # Get all cocktails with parsed ingredients for enrichment
             cocktails = self.cocktail_service.get_all_cocktails()
             cocktails_by_uri = {c.uri: c for c in cocktails if hasattr(c, 'uri')}
             
-            for row in bindings:
+            for row in rows:
                 row_values = []
                 cocktail_uri = None
                 cocktail_name_from_query = None
