@@ -42,9 +42,6 @@ class SimilarityService:
         parts = [f"Nom: {cocktail.name}", f"Ingrédients: {ingredients_str}"]
         if cocktail.description:
             parts.append(f"Description: {cocktail.description}")
-        if cocktail.alternative_names:
-            alt_names_str = ', '.join(cocktail.alternative_names)
-            parts.append(f"Noms alternatifs: {alt_names_str}")
         if cocktail.categories:
             categories_str = ', '.join(cocktail.categories)
             parts.append(f"Catégories: {categories_str}")
@@ -239,7 +236,6 @@ class SimilarityService:
                     closest_to_center=[]
                 )
             clusters[label_int].cocktail_ids.append(cocktail.id)
-            cocktail.vibe_id = label_int
         
         # Keep track of closest cocktails to center
         centroids = kmeans.centroids
