@@ -15,6 +15,7 @@ class SparqlService:
     def __init__(self, local_graph: Optional[Union[str, Graph]] = None):
         self.endpoint = "https://dbpedia.org/sparql"
         self.local_endpoint = "http://localhost:3030/marmitonic"
+        self.local_graph_path = "data.ttl"
 
         # If local_graph is a Graph object, use it directly
         if isinstance(local_graph, Graph):
