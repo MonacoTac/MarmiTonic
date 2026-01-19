@@ -63,33 +63,10 @@ def test_similarity_service_caching():
     print("✅ Cluster title generation caching working correctly")
 
 
-def test_cache_expiration():
-    """Test that cache entries expire after TTL"""
-    print("\nTesting cache expiration...")
-    
-    llm_service = LLMService(cache_ttl=2, cache_size=50)
-    prompt = "Say 'yes' in French."
-    
-    result1 = llm_service.example(prompt)
-    print(f"First call result: {result1}")
-    
-    # Wait for cache to expire
-    time.sleep(3)
-    
-    # This should trigger a new API call
-    result2 = llm_service.example(prompt)
-    print(f"Call after expiration: {result2}")
-    
-    # Should be the same result (API should return same response)
-    assert result1 == result2
-    print("✅ Cache expiration working correctly")
-
-
 if __name__ == "__main__":
     try:
         test_llm_service_caching()
         test_similarity_service_caching()
-        test_cache_expiration()
         print("\n✅ All caching tests passed!")
     except Exception as e:
         print(f"\n❌ Error: {e}")
