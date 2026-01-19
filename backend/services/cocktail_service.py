@@ -14,17 +14,6 @@ class CocktailService:
         self.ingredient_service = IngredientService()
         # No longer maintaining own graph state, relying on centralized parser
 
-    @staticmethod
-    def generate_slug(name: str) -> str:
-        """Generate a slug from cocktail name"""
-        # Delegated to the parser via the models usually, but kept for utility if needed
-        import re
-        slug = name.lower()
-        slug = re.sub(r'\([^)]*\)', '', slug)
-        slug = re.sub(r'[^a-z0-9]+', '-', slug)
-        slug = slug.strip('-')
-        return slug
-
     def get_all_cocktails(self) -> List[Cocktail]:
         """Get all cocktails from local TTL data using centralized parser"""
         return get_local_cocktails()
@@ -72,11 +61,6 @@ class CocktailService:
     def get_cocktails_by_ingredients(self, ingredients: List[str]) -> List[Cocktail]:
         """Get cocktails that contain all specified ingredients"""
         return get_local_cocktails_by_ingredients(ingredients)
-
-    def get_cocktails_by_uris(self, uris: List[str]) -> List[Cocktail]:
-        """Get cocktails that contain ingredients with the specified URIs"""
-        # Simplified fallback as ttl_parser doesn't fully map URIs yet in public API
-        return []
 
     def get_cocktail_details(self, cocktail_uri: str) -> Optional[Dict[str, Any]]:
         """Get full details for a cocktail"""

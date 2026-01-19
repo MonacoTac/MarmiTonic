@@ -41,13 +41,6 @@ async def get_cocktails_by_ingredients(ingredients: List[str] = Query(..., descr
         return get_cocktail_service().get_cocktails_by_ingredients(ingredients)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@router.get("/by-uris")
-async def get_cocktails_by_uris(uris: List[str] = Query(..., description="List of ingredient URIs to search for")):
-    try:
-        return get_cocktail_service().get_cocktails_by_uris(uris)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
     
 # similarity endpoints
 @router.get("/similar/{cocktail_id}")

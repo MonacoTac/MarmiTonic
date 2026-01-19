@@ -35,9 +35,7 @@ def mock_cocktail():
         name="Mojito",
         ingredients="* 45 ml White Rum\n* 20 ml Lime Juice\n* 15 ml Sugar Syrup\n* 90 ml Soda Water\n* 6 leaves Mint",
         parsed_ingredients=["White Rum", "Lime Juice", "Sugar Syrup", "Soda Water", "Mint"],
-        preparation="Muddle mint and lime, add rum and sugar, top with soda",
-        served="Highball glass",
-        garnish="Mint sprig and lime wedge"
+        preparation="Muddle mint and lime, add rum and sugar, top with soda"
     )
 
 
@@ -47,7 +45,7 @@ def mock_ingredient():
     return Ingredient(
         id="http://example.com/Rum",
         name="Rum",
-        category="Base Spirit",
+        categories=["Base Spirit"],
         description="A distilled alcoholic drink"
     )
 
@@ -153,17 +151,6 @@ class TestCocktailsEndpoints:
         response = client.get("/cocktails/by-ingredients")
         
         assert response.status_code == 422  # Validation error
-
-    @patch('backend.routes.cocktails.get_cocktail_service')
-    def test_get_cocktails_by_uris(self, mock_get_service, client, mock_cocktail):
-        """Test GET /cocktails/by-uris?uris="""
-        mock_get_service.return_value.get_cocktails_by_uris.return_value = [mock_cocktail]
-
-        response = client.get("/cocktails/by-uris?uris=http://example.com/Rum")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == 1
 
     @patch('backend.routes.cocktails.similarity_service')
     def test_get_similar_cocktails(self, mock_service, client, mock_cocktail):
