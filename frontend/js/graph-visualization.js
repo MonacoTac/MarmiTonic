@@ -108,7 +108,7 @@ class GraphVisualizationPage {
         this.elements.nlToSparqlBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Conversion...';
 
         try {
-            const response = await fetch('http://localhost:8000/llm/nl2sparql', {
+            const response = await fetch(`${API_BASE_URL}/llm/nl2sparql`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -145,7 +145,7 @@ class GraphVisualizationPage {
         this.showLoadingState();
 
         try {
-            const response = await fetch('http://localhost:8000/graphs/sparql', {
+            const response = await fetch(`${API_BASE_URL}/graphs/sparql`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
