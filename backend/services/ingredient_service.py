@@ -46,7 +46,7 @@ class IngredientService:
                 existing_ids = {ing.id for ing in ingredients}
                 existing_names = {ing.name.lower() for ing in ingredients}
                 
-                for result in results["results"]["bindings"]:
+                for result in results:
                     uri = result["id"]["value"]
                     name = result["name"]["value"]
                     
@@ -77,7 +77,7 @@ class IngredientService:
         """
         try:
             results = self.sparql_service.execute_local_query(query)
-            return [result["ingredient"]["value"] for result in results["results"]["bindings"]]
+            return [result["ingredient"]["value"] for result in results]
         except:
             return []
 
@@ -91,9 +91,9 @@ class IngredientService:
         }}
         """
         try:
-            results = self.sparql_service.query_local_data(query)
-            if results and results.get("results") and results["results"].get("bindings"):
-                result = results["results"]["bindings"][0]
+            results = self.sparql_service.execute_local_query(query)
+            if results and len(results) > 0:
+                result = results[0]
                 return Ingredient(
                     id=uri,
                     name=result.get("name", {}).get("value", "Unknown"),
@@ -132,7 +132,7 @@ class IngredientService:
             
             local_names = {ing.name.lower() for ing in local_matches}
             
-            for result in results["results"]["bindings"]:
+            for result in results:
                 name = result["name"]["value"]
                 if name.lower() in local_names:
                     continue # Skip if already found locally
@@ -172,8 +172,8 @@ class IngredientService:
         """
         try:
             results = self.sparql_service.execute_query(query)
-            if results["results"]["bindings"]:
-                result = results["results"]["bindings"][0]
+            if results and len(results) > 0:
+                result = results[0]
                 return Ingredient(
                     id=uri,
                     name=result["name"]["value"],
@@ -205,7 +205,7 @@ class IngredientService:
         try:
             results = self.sparql_service.execute_query(query)
             ingredients = []
-            for result in results["results"]["bindings"]:
+            for result in results:
                 ingredient = Ingredient(
                     id=result["ingredient"]["value"],
                     name=result["name"]["value"],
@@ -227,7 +227,7 @@ class IngredientService:
         """
         try:
             results = self.sparql_service.execute_query(query)
-            return [result["category"]["value"] for result in results["results"]["bindings"]]
+            return [result["category"]["value"] for result in results]
         except Exception as e:
             print(f"Error getting all categories: {e}")
             return []

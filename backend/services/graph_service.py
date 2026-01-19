@@ -3,8 +3,6 @@ from typing import Dict, List, Any, Optional
 from backend.services.cocktail_service import CocktailService
 from backend.services.ingredient_service import IngredientService
 from backend.services.sparql_service import SparqlService
-import json
-import io
 
 
 class GraphService:

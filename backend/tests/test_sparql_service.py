@@ -63,34 +63,3 @@ class TestSparqlService:
 
         result = sparql_service.execute_local_query('INVALID QUERY')
         assert result is None
-
-    def test_query_local_data_cocktails(self, sparql_service):
-        mock_graph = Mock()
-        sparql_service.local_graph = mock_graph
-        
-        mock_result = Mock()
-        mock_result.vars = ['cocktail']
-        mock_result.__iter__ = Mock(return_value=iter([[URIRef('http://example.com/c1')]]))
-        mock_graph.query.return_value = mock_result
-
-        result = sparql_service.query_local_data('cocktails')
-
-        assert result is not None
-        assert 'c1' in str(result)
-        mock_graph.query.assert_called()
-
-    def test_query_local_data_with_params(self, sparql_service):
-        mock_graph = Mock()
-        sparql_service.local_graph = mock_graph
-        
-        mock_result = Mock()
-        mock_result.vars = ['property', 'value']
-        mock_result.__iter__ = Mock(return_value=iter([[URIRef('http://purl.org/dc/terms/title'), 'Test']]))
-        mock_graph.query.return_value = mock_result
-
-        result = sparql_service.query_local_data('cocktail', uri='http://example.com/c1')
-
-        assert result is not None
-        assert isinstance(result, list)
-        assert len(result) == 1
-        assert result[0]['property']['value'] == 'http://purl.org/dc/terms/title'
