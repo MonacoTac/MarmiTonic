@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         try {
             // Make API call
-            const response = await fetch(`http://localhost:8000/ingredients/optimize?N=${N}`);
+            const response = await fetch(`${API_BASE_URL}/ingredients/optimize?N=${N}`);
             if (!response.ok) {
                 throw new Error('Failed to optimize ingredients');
             }
