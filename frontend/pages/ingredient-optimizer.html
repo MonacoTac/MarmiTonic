@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Base Styles -->
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/navbar.css">
+    <!-- Reuse discovery styles for cards -->
+    <link rel="stylesheet" href="../css/discovery.css">
+    <!-- Page Specific Styles -->
+    <link rel="stylesheet" href="../css/ingredient-optimizer.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <title>Ingredient Optimizer - MarmiTonic</title>
+</head>
+<body>
+    <header>
+        <nav id="navbar" class="navbar">
+            <div class="navbar-left">
+                <a href="discovery.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Explorer
+                    </div>
+                </a>
+                <a href="my-bar.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Mon Bar
+                    </div>
+                </a>
+                <a href="planner.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Planificateur
+                    </div>
+                </a>
+                <a href="graph-visualization.html" class="link-main">
+                    <div h="full" class="hover-underline-animation">                        
+                        Graphes
+                    </div>
+                </a>
+                <a href="ingredient-optimizer.html" class="link-main active">
+                    <div h="full" class="hover-underline-animation">                        
+                        Optimiseur
+                    </div>
+                </a>
+            </div>
+            <div class="navbar-center">
+                <img src="../assets/logo.png" alt="MarmiTonic Logo">
+                <a href="../index.html" class="link-main">
+                    <span>MarmiTonic</span>
+                </a>
+            </div>
+            <div class="navbar-right">
+                <input type="text" placeholder="Recherche">
+                <img src="../assets/account.png" alt="">
+            </div>
+        </nav>
+        
+        <div id="no-navbar-menu" class="no-navbar-menu">
+            <i class="fa fa-bars" aria-hidden="true"></i>
+            <p>Menu</p>
+        </div>
+    </header>
+    
+    <main class="page-container optimizer-page">
+        <!-- Page Header -->
+        <section class="page-header">
+            <h1>Optimiseur d'Ingrédients</h1>
+            <p class="subtitle">Trouvez le meilleur ensemble d'ingrédients pour maximiser vos cocktails</p>
+        </section>
+
+        <!-- Controls Section -->
+        <section class="controls-section">
+            <div class="controls-container">
+                <form id="optimizer-form" class="optimizer-form">
+                    <div class="form-group">
+                        <label for="num-ingredients">Nombre d'ingrédients à sélectionner :</label>
+                        <input type="number" id="num-ingredients" name="N" min="1" max="50" value="10" required>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fa fa-search"></i> Optimiser
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section class="results-section" id="results-section" style="display: none;">
+            <div class="results-container">
+                <h2>Résultats</h2>
+                <div class="metric-card">
+                    <div class="metric-value" id="cocktail-count">0</div>
+                    <div class="metric-label">Cocktails possibles</div>
+                </div>
+                <div class="ingredients-list">
+                    <h3>Ingrédients sélectionnés :</h3>
+                    <ul id="selected-ingredients"></ul>
+                </div>
+                
+                <div class="possible-cocktails-section">
+                    <h3>Cocktails possibles :</h3>
+                    <div id="possible-cocktails-grid" class="cocktails-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Section -->
+        <section class="loading-section" id="loading-section" style="display: none;">
+            <div class="loading-container">
+                <i class="fa fa-spinner fa-spin"></i>
+                <p>Optimisation en cours...</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Core Scripts -->
+    <script src="../js/api.js"></script>
+    <script src="../js/navbar.js"></script>
+    <!-- Page Specific Scripts -->
+    <script src="../js/ingredient-optimizer.js"></script>
+</body>
+</html>

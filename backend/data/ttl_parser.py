@@ -16,8 +16,8 @@ from typing import List, Dict, Any, Optional, Set
 import os
 import re
 
-from models.cocktail import Cocktail
-from models.ingredient import Ingredient
+from backend.models.cocktail import Cocktail
+from backend.models.ingredient import Ingredient
 
 # Définition des namespaces DBpedia
 DBR = Namespace("http://dbpedia.org/resource/")
@@ -30,6 +30,17 @@ FOAF = Namespace("http://xmlns.com/foaf/0.1/")
 class IBADataParser:
     """Parser pour les données IBA en format Turtle avec extraction d'ingrédients"""
     
+    _instance = None
+    _lock = __import__('threading').Lock()
+    
+    def __new__(cls, ttl_file_path: str = "data.ttl"):
+        """Singleton pattern to ensure only one parser instance exists"""
+        with cls._lock:
+            if cls._instance is None:
+                cls._instance = super(IBADataParser, cls).__new__(cls)
+                cls._instance._initialized = False
+            return cls._instance
+    
     def __init__(self, ttl_file_path: str = "data.ttl"):
         """
         Initialise le parser et charge le fichier TTL en mémoire
@@ -37,12 +48,18 @@ class IBADataParser:
         Args:
             ttl_file_path: Chemin vers le fichier TTL (relatif au répertoire data/)
         """
-        print(f"DEBUG: IBADataParser init with ttl_file_path: '{ttl_file_path}'")
+        # Only initialize once
+        if self._initialized:
+            return
+            
+        print(f"Initializing IBADataParser (singleton) with ttl_file_path: '{ttl_file_path}'")
         self.graph = Graph()
         self.ttl_file_path = ttl_file_path
         self._ingredients_cache = None  # Cache pour les ingrédients dédupliqués
         self._cocktails_cache = None     # Cache pour les cocktails
         self._load_data()
+        self._initialized = True
+        print(f"✅ IBADataParser initialized with {len(self.graph)} triples")
     
     @staticmethod
     def generate_slug(name: str) -> str:
@@ -55,19 +72,22 @@ class IBADataParser:
     
     def _load_data(self):
         """Charge le fichier TTL dans le graph RDFLib"""
+        import time
         # Utiliser un chemin absolu basé sur la racine du projet
         project_root = Path(__file__).parent.parent.parent  # Remonte de data/ vers backend/ vers racine
         file_path = project_root / "backend" / "data" / self.ttl_file_path
         
         try:
-            print(f"Chargement du fichier TTL: {file_path}")
-            self.graph.parse(str(file_path), format="turtle")
-            print(f"✅ Chargé {len(self.graph)} triples")
+            print(f"Loading TTL file: {file_path}...")
+            start_time = time.time()
+            self.graph.parse(str(file_path), format="turtle", encoding="utf-8")
+            load_time = time.time() - start_time
+            print(f"✅ Loaded {len(self.graph)} triples in {load_time:.3f}s")
         except FileNotFoundError:
-            print(f"❌ Fichier non trouvé: {file_path}")
+            print(f"❌ File not found: {file_path}")
             raise
         except Exception as e:
-            print(f"❌ Erreur lors du chargement: {e}")
+            print(f"❌ Error loading file: {e}")
             raise
     
     def _parse_ingredients_text(self, ingredients_text: str) -> List[str]:
@@ -240,7 +260,10 @@ class IBADataParser:
             Liste d'instances Cocktail
         """
         if self._cocktails_cache:
+            print(f"Using cached cocktails ({len(self._cocktails_cache)} items)")
             return self._cocktails_cache
+        
+        print(f"Building cocktails cache...")
         
         query = """
         PREFIX dbr: <http://dbpedia.org/resource/>
@@ -310,18 +333,13 @@ class IBADataParser:
                 uri=cocktail_uri,
                 id=self.generate_slug(cocktail_name),
                 name=cocktail_name,
-                alternative_names=[str(row.labelFr)] if row.labelFr else None,
                 description=str(row.desc) if row.desc else None,
                 image=str(row.img) if row.img else None,
                 ingredients=ingredients_raw,
                 parsed_ingredients=parsed_ingredients,
                 preparation=str(row.prep) if row.prep else None,
-                served=str(row.served) if row.served else None,
-                garnish=str(row.garnish) if row.garnish else None,
                 source_link=str(row.sourcelink) if row.sourcelink else None,
-                categories=categories if categories else None,
-                labels=labels if labels else None,
-                descriptions=descriptions if descriptions else None
+                categories=categories if categories else None
             )
             cocktails_dict[cocktail_uri] = cocktail
         
@@ -388,8 +406,6 @@ class IBADataParser:
         # Autres propriétés DBpedia
         for prop, key in [
             (DBP.prep, "preparation"),
-            (DBP.garnish, "garnish"),
-            (DBP.served, "served"),
             (DBP.name, "name"),
             (DBP.sourcelink, "sourcelink")
         ]:
@@ -416,7 +432,10 @@ class IBADataParser:
             Liste d'instances Ingredient
         """
         if self._ingredients_cache:
+            print(f"Using cached ingredients ({len(self._ingredients_cache)} items)")
             return self._ingredients_cache
+        
+        print(f"Building ingredients cache...")
         
         ingredients_dict = self._extract_all_ingredients()
         
@@ -431,13 +450,18 @@ class IBADataParser:
                 id=ingredient_id,
                 name=normalized.title(), # Use normalized name for consistency (e.g. "Dry Vermouth" -> "Vermouth")
                 description=f"Utilisé dans {data['count']} cocktails IBA",
-                categories=[f"Count:{data['count']}"],  # Stocker le count dans les catégories temporairement
-                related_concepts=data["cocktails"]  # Cocktails qui utilisent cet ingrédient
+                categories=[f"Count:{data['count']}"]  # Stocker le count dans les catégories temporairement
             )
             ingredient_list.append(ingredient)
         
-        # Trier par fréquence d'utilisation (plus utilisé en premier)
-        ingredient_list.sort(key=lambda x: (-len(x.related_concepts), x.name.lower()))
+        # Trier par fréquence d'utilisation (plus utilisé en premier) puis alphabétique
+        def sort_key(ing):
+            if ing.categories and ing.categories[0].startswith('Count:'):
+                count = int(ing.categories[0].split(':')[1])
+                return (-count, ing.name.lower())
+            return (0, ing.name.lower())
+        
+        ingredient_list.sort(key=sort_key)
         
         self._ingredients_cache = ingredient_list
         return ingredient_list
@@ -503,8 +527,7 @@ class IBADataParser:
             "total_cocktails": len(cocktails),
             "total_unique_ingredients": len(ingredients),
             "avg_ingredients_per_cocktail": round(avg_ingredients, 2),
-            "most_used_ingredient": ingredients[0].name if ingredients else None,
-            "most_used_ingredient_count": len(ingredients[0].related_concepts) if ingredients else 0
+            "most_used_ingredient": ingredients[0].name if ingredients else None
         }
     
     def execute_sparql(self, sparql_query: str) -> List[Dict[str, Any]]:
@@ -530,8 +553,6 @@ class IBADataParser:
 
 
 # Instance globale (singleton) pour éviter de recharger le fichier à chaque fois
-_parser_instance = None
-
 def get_parser() -> IBADataParser:
     """
     Retourne l'instance singleton du parser
@@ -539,10 +560,7 @@ def get_parser() -> IBADataParser:
     Returns:
         Instance du parser IBA
     """
-    global _parser_instance
-    if _parser_instance is None:
-        _parser_instance = IBADataParser()
-    return _parser_instance
+    return IBADataParser()
 
 
 # Fonctions d'accès rapide
@@ -599,7 +617,8 @@ if __name__ == "__main__":
     # Top 20 ingrédients
     print(f"\n🥃 Top 20 ingrédients les plus utilisés:")
     for i, ingredient in enumerate(parser.get_all_ingredients()[:20], 1):
-        count = len(ingredient.related_concepts) if ingredient.related_concepts else 0
+        # Extract count from categories if available
+        count = int(ingredient.categories[0].split(':')[1]) if ingredient.categories and ingredient.categories[0].startswith('Count:') else 0
         print(f"   {i:2d}. {ingredient.name:30s} (utilisé dans {count} cocktails)")
     
     # Détails d'un cocktail

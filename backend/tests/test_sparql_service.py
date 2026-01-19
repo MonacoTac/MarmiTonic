@@ -21,34 +21,34 @@ class TestSparqlService:
 
     def test_init(self, sparql_service):
         assert sparql_service.endpoint == 'https://dbpedia.org/sparql'
-        assert sparql_service.local_graph_path == 'data/data.ttl'
+        assert 'data.ttl' in sparql_service.local_graph_path
         assert sparql_service.local_endpoint == 'http://localhost:3030/marmitonic'
 
     def test_execute_query_success(self, sparql_service):
         mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {'results': {'bindings': [{'test': {'value': 'test_value'}}]}}
+        mock_response.convert.return_value = {'results': {'bindings': [{'test': {'value': 'test_value'}}]}}
 
-        with patch('services.sparql_service.requests.get', return_value=mock_response) as mock_get:
+        with patch('services.sparql_service.SPARQLWrapper') as mock_sparql_wrapper:
+            instance = mock_sparql_wrapper.return_value
+            instance.query.return_value = mock_response
+            
             result = sparql_service.execute_query('SELECT * WHERE { ?s ?p ?o }')
 
-            mock_get.assert_called_once()
-            # assert 'SELECT' in mock_get.call_args[0][0]
+            mock_sparql_wrapper.assert_called_once()
             assert result['results']['bindings'][0]['test']['value'] == 'test_value'
 
     def test_execute_query_http_error(self, sparql_service):
-        mock_response = Mock()
-        mock_response.status_code = 500
-        mock_response.raise_for_status.side_effect = Exception('HTTP 500 Error')
-
-        with patch('services.sparql_service.requests.get', return_value=mock_response):
+        # Mock both SPARQLWrapper and requests to ensure we return None
+        with patch('services.sparql_service.SPARQLWrapper.query', side_effect=Exception('HTTP 500 Error')), \
+             patch('services.sparql_service.requests.get', side_effect=Exception('HTTP 500 Error')):
             result = sparql_service.execute_query('SELECT * WHERE { ?s ?p ?o }')
 
             assert result is None
 
     def test_execute_query_timeout(self, sparql_service):
         import requests
-        with patch('services.sparql_service.requests.get', side_effect=requests.Timeout()):
+        with patch('services.sparql_service.SPARQLWrapper.query', side_effect=requests.Timeout()), \
+             patch('services.sparql_service.requests.get', side_effect=requests.Timeout()):
             result = sparql_service.execute_query('SELECT * WHERE { ?s ?p ?o }')
             assert result is None
 
@@ -104,37 +104,3 @@ class TestSparqlService:
 
         assert result is not None
         assert 'results' in result
-
-    def test_get_all_cocktails_from_dbpedia(self, sparql_service):
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            'results': {
-                'bindings': [
-                    {'cocktail': {'value': 'http://dbpedia.org/resource/Mojito'}},
-                    {'cocktail': {'value': 'http://dbpedia.org/resource/Martini'}}
-                ]
-            }
-        }
-
-        with patch('services.sparql_service.requests.get', return_value=mock_response):
-            result = sparql_service.get_all_cocktails_from_dbpedia()
-
-            assert len(result) == 2
-            assert 'Mojito' in str(result)
-            assert 'Martini' in str(result)
-
-    def test_get_all_cocktails_from_dbpedia_empty(self, sparql_service):
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {'results': {'bindings': []}}
-
-        with patch('services.sparql_service.requests.get', return_value=mock_response):
-            result = sparql_service.get_all_cocktails_from_dbpedia()
-            assert result == []
-
-    def test_get_all_cocktails_from_dbpedia_error(self, sparql_service):
-        import requests
-        with patch('services.sparql_service.requests.get', side_effect=requests.ConnectionError()):
-            result = sparql_service.get_all_cocktails_from_dbpedia()
-            assert result is None

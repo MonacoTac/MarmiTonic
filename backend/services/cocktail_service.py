@@ -14,17 +14,6 @@ class CocktailService:
         self.ingredient_service = IngredientService()
         # No longer maintaining own graph state, relying on centralized parser
 
-    @staticmethod
-    def generate_slug(name: str) -> str:
-        """Generate a slug from cocktail name"""
-        # Delegated to the parser via the models usually, but kept for utility if needed
-        import re
-        slug = name.lower()
-        slug = re.sub(r'\([^)]*\)', '', slug)
-        slug = re.sub(r'[^a-z0-9]+', '-', slug)
-        slug = slug.strip('-')
-        return slug
-
     def get_all_cocktails(self) -> List[Cocktail]:
         """Get all cocktails from local TTL data using centralized parser"""
         return get_local_cocktails()
@@ -72,11 +61,6 @@ class CocktailService:
     def get_cocktails_by_ingredients(self, ingredients: List[str]) -> List[Cocktail]:
         """Get cocktails that contain all specified ingredients"""
         return get_local_cocktails_by_ingredients(ingredients)
-
-    def get_cocktails_by_uris(self, uris: List[str]) -> List[Cocktail]:
-        """Get cocktails that contain ingredients with the specified URIs"""
-        # Simplified fallback as ttl_parser doesn't fully map URIs yet in public API
-        return []
 
     def get_cocktail_details(self, cocktail_uri: str) -> Optional[Dict[str, Any]]:
         """Get full details for a cocktail"""
@@ -136,13 +120,20 @@ class CocktailService:
 
         # Get graph analysis with communities
         graph_service = GraphService()
-        analysis = graph_service.analyze_graph()
+        graph_data = graph_service.build_graph()
+        if not graph_data:
+            return []
+            
+        analysis = graph_service.analyze_graph(graph_data)
+        if not analysis:
+            return []
+            
         communities = analysis.get('communities', {})
 
-        # Find the community of the target cocktail
+        # Find the community of the target cocktail (using cocktail id, not name)
         target_community = None
         for node, community_id in communities.items():
-            if node == target_cocktail.name:
+            if node == target_cocktail.id:
                 target_community = community_id
                 break
 
@@ -152,8 +143,8 @@ class CocktailService:
         # Find all cocktails in the same community
         same_vibe_cocktails = []
         for cocktail in all_cocktails:
-            if cocktail.id != cocktail_id and cocktail.name in communities:
-                if communities[cocktail.name] == target_community:
+            if cocktail.id != cocktail_id and cocktail.id in communities:
+                if communities[cocktail.id] == target_community:
                     same_vibe_cocktails.append(cocktail)
 
         # Return up to limit cocktails
@@ -167,7 +158,14 @@ class CocktailService:
 
         # Get graph analysis with communities
         graph_service = GraphService()
-        analysis = graph_service.analyze_graph()
+        graph_data = graph_service.build_graph()
+        if not graph_data:
+            return []
+            
+        analysis = graph_service.analyze_graph(graph_data)
+        if not analysis:
+            return []
+            
         communities = analysis.get('communities', {})
 
         bridge_cocktails = []
@@ -179,8 +177,17 @@ class CocktailService:
             # Collect communities of ingredients used in this cocktail
             ingredient_communities = set()
             for ingredient_name in cocktail.parsed_ingredients:
-                if ingredient_name in communities:
-                    ingredient_communities.add(communities[ingredient_name])
+                # Find ingredient ID by name (since graph nodes use ingredient IDs)
+                # First, get all ingredients to find matching ID
+                from .ingredient_service import IngredientService
+                ingredient_service = IngredientService()
+                ingredients = ingredient_service.get_all_ingredients()
+                
+                for ing in ingredients:
+                    if ing.name.lower() == ingredient_name.lower():
+                        if ing.id in communities:
+                            ingredient_communities.add(communities[ing.id])
+                        break
 
             # If ingredients span more than one community, it's a bridge cocktail
             if len(ingredient_communities) > 1:

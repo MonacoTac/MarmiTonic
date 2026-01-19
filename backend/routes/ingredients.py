@@ -2,10 +2,12 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import List
 from ..services.ingredient_service import IngredientService
+from ..services.ingredient_optimizer_service import IngredientOptimizerService
 
 router = APIRouter()
 
 service = IngredientService()
+optimizer_service = IngredientOptimizerService()
 
 class InventoryUpdate(BaseModel):
     user_id: str
@@ -42,3 +44,11 @@ async def get_inventory(user_id: str):
         return {"user_id": user_id, "ingredients": inventory}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve inventory: {str(e)}")
+
+@router.get("/optimize")
+async def optimize_ingredients(N: int = Query(..., description="Number of ingredients to select")):
+    try:
+        result = optimizer_service.find_optimal_ingredients(N)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to optimize ingredients: {str(e)}")

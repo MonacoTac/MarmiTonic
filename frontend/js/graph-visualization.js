@@ -135,6 +135,7 @@ class GraphVisualizationPage {
 
     async executeSparqlGraph() {
         const query = this.elements.sparqlOutput.value.trim();
+        console.log('Executing SPARQL query:', query);
         if (!query) {
             alert('Aucune requête SPARQL à exécuter.');
             return;
@@ -219,7 +220,7 @@ class GraphVisualizationPage {
         
         // Add cocktail node
         nodes.push({
-            id: cocktail.name,
+            id: cocktail.id,
             name: cocktail.name,
             type: 'cocktail'
         });
@@ -241,7 +242,7 @@ class GraphVisualizationPage {
                 
                 // Add link
                 links.push({
-                    source: cocktail.name,
+                    source: cocktail.id,
                     target: ingredientName,
                     value: 1
                 });
@@ -258,13 +259,13 @@ class GraphVisualizationPage {
         
         // Add all cocktails
         cocktails.forEach(cocktail => {
-            if (!nodeIds.has(cocktail.name)) {
+            if (!nodeIds.has(cocktail.id)) {
                 nodes.push({
-                    id: cocktail.name,
+                    id: cocktail.id,
                     name: cocktail.name,
                     type: 'cocktail'
                 });
-                nodeIds.add(cocktail.name);
+                nodeIds.add(cocktail.id);
             }
         });
         
@@ -287,7 +288,7 @@ class GraphVisualizationPage {
                     
                     // Add link
                     links.push({
-                        source: cocktail.name,
+                        source: cocktail.id,
                         target: ingredientName,
                         value: 1
                     });
@@ -433,6 +434,7 @@ class GraphVisualizationPage {
     }
 
     activateGinMode() {
+        // return; // désactive l'easter egg quand ça dérange
         console.log('activateGinMode called! Current state:', this.ginModeActive);
         
         if (this.ginModeActive) {
@@ -504,9 +506,6 @@ class GraphVisualizationPage {
             
             this.ginModeActive = false;
             console.log('HORRIBLE GIN MODE deactivated');
-            
-            // Recharger la page pour être sûr de tout restaurer
-            window.location.reload();
         }, 10000);
     }
 }

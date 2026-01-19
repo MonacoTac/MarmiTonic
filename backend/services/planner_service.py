@@ -1,5 +1,5 @@
-from .cocktail_service import CocktailService
-from .ingredient_service import IngredientService
+from backend.services.cocktail_service import CocktailService
+from backend.services.ingredient_service import IngredientService
 from typing import List, Dict, Set
 
 
@@ -40,16 +40,18 @@ class PlannerService:
         while covered != universe:
             best_ing = None
             max_cover = 0
+            best_covers = set()
             for ing in all_ingredients - set(selected):
                 covers = {c for c in universe if ing in self.cocktail_ingredients.get(c, set()) and c not in covered}
                 if len(covers) > max_cover:
                     max_cover = len(covers)
                     best_ing = ing
+                    best_covers = covers
             if best_ing is None:
                 # Cannot cover remaining
                 break
             selected.append(best_ing)
-            covered.update(covers)
+            covered.update(best_covers)
 
         return {
             'selected_ingredients': selected,

@@ -1,8 +1,8 @@
 import networkx as nx
 from typing import Dict, List, Any, Optional
-from .cocktail_service import CocktailService
-from .ingredient_service import IngredientService
-from .sparql_service import SparqlService
+from backend.services.cocktail_service import CocktailService
+from backend.services.ingredient_service import IngredientService
+from backend.services.sparql_service import SparqlService
 import json
 import io
 
@@ -80,362 +80,122 @@ class GraphService:
     def get_graph_data(self, query: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """
         Get graph data from SPARQL service and convert to graph format.
-        If query is provided, execute it. Otherwise use default query.
+        Requires a query - no default fallback.
+        Uses parsed ingredients from cocktails to create individual ingredient nodes.
         """
         try:
             # Query data from SPARQL service
-            if query:
-                final_results = self.sparql_service.execute_local_query(query)
-            else:
-                # Default behavior: generic query for cocktails and ingredients
-                default_query = """
-                PREFIX dbo: <http://dbpedia.org/ontology/>
-                PREFIX dbp: <http://dbpedia.org/property/>
-                
-                SELECT ?cocktail ?ingredient WHERE {
-                    ?cocktail a dbo:Cocktail .
-                    ?cocktail dbp:ingredients ?ingredient .
-                } LIMIT 100
-                """
-                final_results = self.sparql_service.execute_local_query(default_query)
+            if not query:
+                raise ValueError("No SPARQL query provided")
+            
+            final_results = self.sparql_service.execute_local_query(query)
             
             if not final_results or 'results' not in final_results or 'bindings' not in final_results['results']:
                 return None
             
-            # Build graph from query results (Flexible parsing)
+            # Build graph from query results
             nodes = {}
             edges = []
             
             bindings = final_results['results']['bindings']
             
+            # Get all cocktails with parsed ingredients for enrichment
+            cocktails = self.cocktail_service.get_all_cocktails()
+            cocktails_by_uri = {c.uri: c for c in cocktails if hasattr(c, 'uri')}
+            
             for row in bindings:
-                # Extract all URIs/Literals as nodes
                 row_values = []
+                cocktail_uri = None
+                cocktail_name_from_query = None
+                
                 for var_name, value_obj in row.items():
                     val = value_obj['value']
                     type_ = value_obj['type']
                     
+                    # Track cocktail URI and name
+                    if var_name == 'cocktail':
+                        cocktail_uri = val
+                    elif var_name == 'name':
+                        cocktail_name_from_query = val
+                    
                     if val not in nodes:
-                         nodes[val] = {
-                             'id': val, 
-                             'name': val.split('/')[-1] if type_ == 'uri' else val,
-                             'type': 'resource' if type_ == 'uri' else 'literal'
-                         }
+                        # Use the name from query if available for better display
+                        node_name = val.split('/')[-1].replace('_', ' ') if type_ == 'uri' else val
+                        if var_name == 'cocktail' and cocktail_name_from_query:
+                            node_name = cocktail_name_from_query
+                        
+                        # For cocktails, get the slug ID from cocktail_service
+                        cocktail_id = val  # Default to URI
+                        if var_name == 'cocktail' and cocktail_uri in cocktails_by_uri:
+                            cocktail_id = cocktails_by_uri[cocktail_uri].id  # Use slug ID
+                        
+                        nodes[val] = {
+                            'id': cocktail_id if var_name == 'cocktail' else val,
+                            'uri': val if var_name == 'cocktail' else None,  # Keep URI for reference
+                            'name': node_name,
+                            'type': 'cocktail' if var_name == 'cocktail' else ('ingredient' if type_ == 'uri' else 'literal')
+                        }
                     row_values.append(val)
                 
-                # Create links (Star topology or pairwise)
+                # Update cocktail node with proper name and ID if we got it from query
+                if cocktail_uri and cocktail_uri in nodes and cocktail_uri in cocktails_by_uri:
+                    nodes[cocktail_uri]['name'] = cocktail_name_from_query or nodes[cocktail_uri]['name']
+                    nodes[cocktail_uri]['id'] = cocktails_by_uri[cocktail_uri].id  # Ensure slug ID
+                
+                # Create edges between cocktail and ingredients (use URI as key)
                 if len(row_values) > 1:
                     source = row_values[0]
                     for target in row_values[1:]:
                         if source != target:
                             edges.append({
-                                'source': source,
+                                'source': cocktails_by_uri[source].id if source in cocktails_by_uri else source,
                                 'target': target
                             })
+                
+                # Add parsed ingredients as individual nodes
+                if cocktail_uri and cocktail_uri in cocktails_by_uri:
+                    cocktail = cocktails_by_uri[cocktail_uri]
+                    if hasattr(cocktail, 'parsed_ingredients') and cocktail.parsed_ingredients:
+                        for ingredient_name in cocktail.parsed_ingredients:
+                            # Create unique ID for ingredient
+                            ingredient_id = f"ingredient:{ingredient_name.lower().replace(' ', '_')}"
                             
+                            if ingredient_id not in nodes:
+                                nodes[ingredient_id] = {
+                                    'id': ingredient_id,
+                                    'name': ingredient_name,
+                                    'type': 'ingredient'
+                                }
+                            
+                            # Add edge from cocktail (using slug ID) to ingredient
+                            if not any(e['source'] == cocktail.id and e['target'] == ingredient_id for e in edges):
+                                edges.append({
+                                    'source': cocktail.id,  # Use slug ID
+                                    'target': ingredient_id
+                                })
+            
+            # Filter out literal nodes (text fields like dbp:ingredients raw text)
+            # Keep only cocktail and ingredient nodes
+            filtered_nodes = [node for node in nodes.values() if node['type'] in ['cocktail', 'ingredient']]
+            
+            # Filter edges to only those connecting filtered nodes
+            filtered_node_ids = {node['id'] for node in filtered_nodes}
+            filtered_edges = [
+                edge for edge in edges 
+                if edge['source'] in filtered_node_ids and edge['target'] in filtered_node_ids
+            ]
+            
             return {
-                'nodes': list(nodes.values()),
-                'edges': edges
+                'nodes': filtered_nodes,
+                'edges': filtered_edges
             }
             
         except Exception as e:
             print(f"Error getting graph data: {e}")
+            import traceback
+            traceback.print_exc()
             return None
 
-    def analyze_graph(self, graph_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Calculate centrality metrics and perform community detection.
-        Returns a dict with 'metrics' and 'communities'.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            # Calculate centrality metrics
-            degree_centrality = nx.degree_centrality(graph)
-            betweenness_centrality = nx.betweenness_centrality(graph)
-            closeness_centrality = nx.closeness_centrality(graph)
-            
-            # Perform community detection using Louvain method
-            communities = nx.algorithms.community.louvain_communities(graph)
-            
-            # Convert communities to a more usable format
-            community_dict = {}
-            for i, community in enumerate(communities):
-                for node in community:
-                    community_dict[node] = i
-            
-            return {
-                'node_count': len(graph.nodes()),
-                'edge_count': len(graph.edges()),
-                'metrics': {
-                    'degree_centrality': degree_centrality,
-                    'betweenness_centrality': betweenness_centrality,
-                    'closeness_centrality': closeness_centrality
-                },
-                'communities': community_dict
-            }
-            
-        except Exception as e:
-            print(f"Error analyzing graph: {e}")
-            return None
-
-    def visualize_graph(self, graph_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Generate a visualization representation for the graph.
-        Returns a dict with html representation for testing compatibility.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            # Generate a simple HTML representation for testing
-            html_content = f"""
-            <html>
-                <body>
-                    <h1>Graph Visualization</h1>
-                    <p>Nodes: {len(graph.nodes())}</p>
-                    <p>Edges: {len(graph.edges())}</p>
-                </body>
-            </html>
-            """
-            
-            return {
-                'html': html_content,
-                'nodes': list(graph.nodes()),
-                'edges': list(graph.edges())
-            }
-            
-        except Exception as e:
-            print(f"Error visualizing graph: {e}")
-            return None
-
-    def analyze_disjoint_components(self, graph_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Analyze disjoint components in the graph.
-        Returns information about connected components including size and composition.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            # Find connected components
-            components = list(nx.connected_components(graph))
-            
-            # Analyze each component
-            component_analysis = []
-            
-            for i, component in enumerate(components):
-                component_nodes = list(component)
-                
-                component_analysis.append({
-                    'component_id': i,
-                    'size': len(component_nodes),
-                    'nodes': component_nodes
-                })
-            
-            return {
-                'num_components': len(components),
-                'components': component_analysis,
-                'largest_component_size': max([len(c) for c in components]) if components else 0,
-                'smallest_component_size': min([len(c) for c in components]) if components else 0,
-                'isolated_nodes': sum(1 for c in components if len(c) == 1)
-            }
-         
-        except Exception as e:
-            print(f"Error analyzing disjoint components: {e}")
-            return None
-
-    def export_graph(self, graph_data: Dict[str, Any], format: str = "gexf") -> Optional[str]:
-        """
-        Export graph data in the specified format.
-        Returns the formatted string.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            if format == "gexf":
-                # Export to GEXF format
-                buffer = io.BytesIO()
-                nx.write_gexf(graph, buffer, encoding='utf-8')
-                return buffer.getvalue().decode('utf-8')
-            elif format == "json":
-                # Export to JSON format
-                return json.dumps(graph_data)
-            elif format == "xml":
-                # Export to GraphML format
-                buffer = io.BytesIO()
-                nx.write_graphml(graph, buffer, encoding='utf-8')
-                return buffer.getvalue().decode('utf-8')
-            elif format == "dot":
-                # Export to DOT format
-                try:
-                    return nx.nx_pydot.to_pydot(graph).to_string()
-                except ImportError:
-                    # Fallback if pydot is not available
-                    dot_content = "digraph G {\n"
-                    for node in graph.nodes():
-                        dot_content += f"    {node};\n"
-                    for source, target in graph.edges():
-                        dot_content += f"    {source} -> {target};\n"
-                    dot_content += "}\n"
-                    return dot_content
-            else:
-                return None
-            
-        except Exception as e:
-            print(f"Error exporting graph: {e}")
-            return None
-
-    def get_centrality_scores(self, graph_data: Dict[str, Any]) -> Dict[str, float]:
-        """
-        Calculate degree centrality scores for all nodes in the graph.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            # Calculate degree centrality
-            return nx.degree_centrality(graph)
-            
-        except Exception as e:
-            print(f"Error getting centrality scores: {e}")
-            return {}
-
-    def get_community_detection(self, graph_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Perform community detection on the graph.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            # Perform community detection using Louvain method
-            communities = nx.algorithms.community.louvain_communities(graph)
-            
-            # Convert communities to a more usable format
-            community_dict = {}
-            for i, community in enumerate(communities):
-                for node in community:
-                    community_dict[node] = i
-            
-            return {
-                'communities': community_dict,
-                'num_communities': len(communities)
-            }
-            
-        except Exception as e:
-            print(f"Error detecting communities: {e}")
-            return None
-
-    def get_shortest_path(self, graph_data: Dict[str, Any], source: str, target: str) -> Optional[Dict[str, Any]]:
-        """
-        Find the shortest path between two nodes in the graph.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            if source not in graph or target not in graph:
-                return {"path": None, "length": 0}
-            
-            if source == target:
-                return {"path": [source], "length": 0}
-            
-            try:
-                path = nx.shortest_path(graph, source=source, target=target)
-                return {
-                    "path": path,
-                    "length": len(path) - 1
-                }
-            except nx.NetworkXNoPath:
-                return {"path": None, "length": 0}
-            
-        except Exception as e:
-            print(f"Error finding shortest path: {e}")
-            return None
-
-    def get_node_degree(self, graph_data: Dict[str, Any], node: str) -> int:
-        """
-        Get the degree of a specific node in the graph.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            if node in graph:
-                return graph.degree(node)
-            else:
-                return 0
-            
-        except Exception as e:
-            print(f"Error getting node degree: {e}")
-            return 0
-
-    def generate_force_directed_data(self, graph_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Generate data suitable for force-directed graph visualization.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            # Prepare nodes with properties
-            nodes = []
-            for node in graph.nodes():
-                nodes.append({
-                    'id': node,
-                    'name': node
-                })
-            
-            # Prepare links (edges)
-            links = []
-            for source, target in graph.edges():
-                links.append({
-                    'source': source,
-                    'target': target,
-                    'value': 1  # Weight of the edge
-                })
-            
-            return {
-                'nodes': nodes,
-                'links': links
-            }
-            
-        except Exception as e:
-            print(f"Error generating force-directed data: {e}")
-            return None
-
-    def get_graph_statistics(self, graph_data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """
-        Calculate various statistics about the graph.
-        """
-        try:
-            # Convert graph data to NetworkX graph
-            graph = self._convert_to_networkx(graph_data)
-            
-            node_count = len(graph.nodes())
-            edge_count = len(graph.edges())
-            
-            # Calculate density
-            density = nx.density(graph) if node_count > 1 else 0.0
-            
-            # Calculate average degree
-            avg_degree = sum(dict(graph.degree()).values()) / node_count if node_count > 0 else 0.0
-            
-            return {
-                'node_count': node_count,
-                'edge_count': edge_count,
-                'density': density,
-                'avg_degree': avg_degree
-            }
-            
-        except Exception as e:
-            print(f"Error getting graph statistics: {e}")
-            return None
-
-    def _convert_to_networkx(self, graph_data: Dict[str, Any]) -> nx.Graph:
         """
         Convert graph data to NetworkX graph format.
         """

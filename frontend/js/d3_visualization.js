@@ -91,6 +91,8 @@ class D3DisjointForceGraph {
             .attr('fill', d => this.getNodeColor(d.type))
             .attr('stroke', '#fff')
             .attr('stroke-width', 1.5)
+            .style('cursor', d => d.type === 'cocktail' ? 'pointer' : 'default')
+            .on('click', (event, d) => this.handleNodeClick(event, d))
             .call(this.drag(this.simulation));
 
         // Add tooltips
@@ -159,6 +161,14 @@ class D3DisjointForceGraph {
         return colors[type] || colors.default;
     }
 
+    handleNodeClick(event, d) {
+        console.log(`Node clicked: ${d.name} (${d.type})`);
+        if (d.type === 'cocktail' && d.id) {
+            console.log(`Navigating to cocktail detail page for ID: ${d.id}`);
+            window.location.href = `cocktail-detail.html?id=${encodeURIComponent(d.id)}`;
+        }
+    }
+
     // Disjoint graph specific methods
     highlightDisjointComponents() {
         // Find connected components
@@ -168,7 +178,7 @@ class D3DisjointForceGraph {
         const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
         
         this.nodeElements
-            .attr('fill', d => colorScale(components.find(c => c.includes(d.id))?.index || 0));
+            .attr('fill', d => colorScale(components.find(c => c.nodes.includes(d.id))?.index || 0));
     }
 
     findConnectedComponents() {

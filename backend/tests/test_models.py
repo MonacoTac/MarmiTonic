@@ -30,7 +30,6 @@ class TestCocktailModel:
         assert cocktail.uri == "http://dbpedia.org/resource/Margarita"
         assert cocktail.id == "margarita"
         assert cocktail.name == "Margarita"
-        assert cocktail.alternative_names is None
         assert cocktail.description is None
 
     def test_cocktail_with_all_fields(self):
@@ -39,26 +38,20 @@ class TestCocktailModel:
             uri="http://dbpedia.org/resource/Mojito",
             id="mojito",
             name="Mojito",
-            alternative_names=["Cuba Libre"],
             description="A Cuban cocktail",
             image="http://example.com/mojito.jpg",
             ingredients="White rum, sugar, lime juice, soda water, mint",
             parsed_ingredients=["White rum", "Sugar", "Lime juice", "Soda water", "Mint"],
             ingredient_uris=["http://dbpedia.org/resource/Rum"],
             preparation="Mix all ingredients",
-            served="In a highball glass",
-            garnish="Mint sprig",
             source_link="http://example.com/mojito-recipe",
             categories=["Cocktail", "Rum cocktail"],
-            related_ingredients=["Rum", "Mint"],
-            labels={"en": "Mojito", "es": "Mojito"},
-            descriptions={"en": "A refreshing Cuban cocktail"}
+            related_ingredients=["Rum", "Mint"]
         )
         assert cocktail.uri == "http://dbpedia.org/resource/Mojito"
         assert cocktail.id == "mojito"
         assert cocktail.name == "Mojito"
         assert len(cocktail.parsed_ingredients) == 5
-        assert cocktail.labels["en"] == "Mojito"
 
     def test_cocktail_missing_required_id(self):
         """Test that Cocktail rejects data without required id field."""
@@ -135,15 +128,6 @@ class TestCocktailModel:
                 categories="Cocktail"  # type: ignore
             )
 
-    def test_cocktail_invalid_type_for_labels(self):
-        """Test that Cocktail rejects non-dict type for labels field."""
-        with pytest.raises(ValueError):
-            Cocktail(
-                uri="http://dbpedia.org/resource/Margarita", id="margarita",
-                name="Margarita",
-                labels=["en", "Margarita"]  # type: ignore
-            )
-
     def test_cocktail_invalid_uri_format(self):
         """Test that Cocktail accepts URIs (no validation, but should accept string)."""
         # Pydantic doesn't validate URI format by default, but string should be accepted
@@ -159,20 +143,15 @@ class TestCocktailModel:
             uri="http://dbpedia.org/resource/Margarita", id="margarita",
             name="Margarita"
         )
-        assert cocktail.alternative_names is None
         assert cocktail.description is None
         assert cocktail.image is None
         assert cocktail.ingredients is None
         assert cocktail.parsed_ingredients is None
         assert cocktail.ingredient_uris is None
         assert cocktail.preparation is None
-        assert cocktail.served is None
-        assert cocktail.garnish is None
         assert cocktail.source_link is None
         assert cocktail.categories is None
         assert cocktail.related_ingredients is None
-        assert cocktail.labels is None
-        assert cocktail.descriptions is None
 
 
 class TestIngredientModel:
@@ -186,7 +165,6 @@ class TestIngredientModel:
         )
         assert ingredient.id == "http://dbpedia.org/resource/Rum"
         assert ingredient.name == "Rum"
-        assert ingredient.alternative_names is None
         assert ingredient.description is None
 
     def test_ingredient_with_all_fields(self):
@@ -194,18 +172,13 @@ class TestIngredientModel:
         ingredient = Ingredient(
             id="http://dbpedia.org/resource/Gin",
             name="Gin",
-            alternative_names=["Genever", "Juniper spirit"],
             description="A distilled alcoholic spirit flavoured with juniper berries",
             image="http://example.com/gin.jpg",
-            categories=["Spirits", "Distilled beverages"],
-            related_concepts=["Juniper", "Botanicals"],
-            labels={"en": "Gin", "de": "Gin", "fr": "Gin"},
-            descriptions={"en": "A distilled alcoholic spirit"}
+            categories=["Spirits", "Distilled beverages"]
         )
         assert ingredient.id == "http://dbpedia.org/resource/Gin"
         assert ingredient.name == "Gin"
         assert len(ingredient.categories) == 2
-        assert ingredient.related_concepts == ["Juniper", "Botanicals"]
 
     def test_ingredient_missing_required_id(self):
         """Test that Ingredient rejects data without required id field."""
@@ -249,14 +222,7 @@ class TestIngredientModel:
                 name=123  # type: ignore
             )
 
-    def test_ingredient_invalid_type_for_alternative_names(self):
-        """Test that Ingredient rejects non-list type for alternative_names field."""
-        with pytest.raises(ValueError):
-            Ingredient(
-                id="http://dbpedia.org/resource/Rum",
-                name="Rum",
-                alternative_names="Genever"  # type: ignore
-            )
+
 
     def test_ingredient_invalid_type_for_categories(self):
         """Test that Ingredient rejects non-list type for categories field."""
@@ -267,23 +233,9 @@ class TestIngredientModel:
                 categories="Spirits"  # type: ignore
             )
 
-    def test_ingredient_invalid_type_for_related_concepts(self):
-        """Test that Ingredient rejects non-list type for related_concepts field."""
-        with pytest.raises(ValueError):
-            Ingredient(
-                id="http://dbpedia.org/resource/Rum",
-                name="Rum",
-                related_concepts={"0": "Juniper"}  # type: ignore
-            )
 
-    def test_ingredient_invalid_type_for_labels(self):
-        """Test that Ingredient rejects non-dict type for labels field."""
-        with pytest.raises(ValueError):
-            Ingredient(
-                id="http://dbpedia.org/resource/Rum",
-                name="Rum",
-                labels=["en", "Rum"]  # type: ignore
-            )
+
+
 
     def test_ingredient_default_values(self):
         """Test that optional fields have correct default values."""
@@ -291,13 +243,9 @@ class TestIngredientModel:
             id="http://dbpedia.org/resource/Rum",
             name="Rum"
         )
-        assert ingredient.alternative_names is None
         assert ingredient.description is None
         assert ingredient.image is None
         assert ingredient.categories is None
-        assert ingredient.related_concepts is None
-        assert ingredient.labels is None
-        assert ingredient.descriptions is None
 
 
 class TestSparqlQueryModel:
@@ -456,22 +404,13 @@ class TestEdgeCases:
         )
         assert ingredient.name == "Sucre de canne"
 
-    def test_cocktail_nested_list_in_labels(self):
-        """Test Cocktail with complex nested structure in labels."""
-        cocktail = Cocktail(
-            uri="http://dbpedia.org/resource/Test", id="test",
-            name="Test",
-            labels={"en": "Test", "fr": "Test FR", "es": "Test ES"}
-        )
-        assert len(cocktail.labels) == 3
+
 
     def test_ingredient_empty_lists(self):
         """Test Ingredient with empty lists for optional list fields."""
         ingredient = Ingredient(
             id="http://dbpedia.org/resource/Test",
             name="Test",
-            alternative_names=[],
             categories=[]
         )
-        assert ingredient.alternative_names == []
         assert ingredient.categories == []
