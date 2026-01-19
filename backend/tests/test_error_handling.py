@@ -382,26 +382,6 @@ class TestIngredientServiceErrorHandling:
         
         assert ingredient is None
 
-    def test_inventory_operations_edge_cases(self):
-        """Test inventory operations with edge cases"""
-        service = IngredientService()
-        
-        # Add to non-existent user
-        service.add_to_inventory("user1", "Vodka")
-        assert service.inventories["user1"] == ["Vodka"]
-        
-        # Remove from non-existent user
-        service.remove_from_inventory("user2", "Vodka")
-        assert "user2" not in service.inventories
-        
-        # Remove non-existent ingredient
-        service.remove_from_inventory("user1", "Gin")
-        assert service.inventories["user1"] == ["Vodka"]
-        
-        # Clear non-existent user
-        service.clear_inventory("user3")
-        assert "user3" not in service.inventories
-
 
 class TestGraphServiceErrorHandling:
     """Test error handling in GraphService"""

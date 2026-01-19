@@ -73,11 +73,6 @@ class CocktailService:
         """Get cocktails that contain all specified ingredients"""
         return get_local_cocktails_by_ingredients(ingredients)
 
-    def get_cocktails_by_uris(self, uris: List[str]) -> List[Cocktail]:
-        """Get cocktails that contain ingredients with the specified URIs"""
-        # Simplified fallback as ttl_parser doesn't fully map URIs yet in public API
-        return []
-
     def get_cocktail_details(self, cocktail_uri: str) -> Optional[Dict[str, Any]]:
         """Get full details for a cocktail"""
         return get_local_cocktail_details(cocktail_uri)

@@ -154,17 +154,6 @@ class TestCocktailsEndpoints:
         
         assert response.status_code == 422  # Validation error
 
-    @patch('backend.routes.cocktails.get_cocktail_service')
-    def test_get_cocktails_by_uris(self, mock_get_service, client, mock_cocktail):
-        """Test GET /cocktails/by-uris?uris="""
-        mock_get_service.return_value.get_cocktails_by_uris.return_value = [mock_cocktail]
-
-        response = client.get("/cocktails/by-uris?uris=http://example.com/Rum")
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert len(data) == 1
-
     @patch('backend.routes.cocktails.similarity_service')
     def test_get_similar_cocktails(self, mock_service, client, mock_cocktail):
         """Test GET /cocktails/similar/{cocktail_id}"""

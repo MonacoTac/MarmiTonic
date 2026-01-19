@@ -156,20 +156,6 @@ class IngredientService:
     def get_inventory(self, user_id: str) -> List[str]:
         return self.inventories.get(user_id, [])
 
-    def add_to_inventory(self, user_id: str, ingredient_name: str):
-        if user_id not in self.inventories:
-            self.inventories[user_id] = []
-        if ingredient_name not in self.inventories[user_id]:
-            self.inventories[user_id].append(ingredient_name)
-
-    def remove_from_inventory(self, user_id: str, ingredient_name: str):
-        if user_id in self.inventories and ingredient_name in self.inventories[user_id]:
-            self.inventories[user_id].remove(ingredient_name)
-
-    def clear_inventory(self, user_id: str):
-        if user_id in self.inventories:
-            self.inventories[user_id] = []
-
     def get_ingredient_by_uri(self, uri: str) -> Ingredient:
         # Try local first
         local_ing = self._query_local_ingredient(uri)

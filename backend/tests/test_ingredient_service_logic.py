@@ -29,36 +29,6 @@ def ingredient_service():
         service._local_ingredient_loader = MagicMock(return_value=[])
         return service
 
-def test_inventory_management(ingredient_service):
-    user_id = "test_user"
-    
-    # Initially empty
-    assert ingredient_service.get_inventory(user_id) == []
-    
-    # Add items
-    ingredient_service.add_to_inventory(user_id, "Rum")
-    assert ingredient_service.get_inventory(user_id) == ["Rum"]
-    
-    # Add duplicate (should not duplicate)
-    ingredient_service.add_to_inventory(user_id, "Rum")
-    assert ingredient_service.get_inventory(user_id) == ["Rum"]
-    
-    # Add another
-    ingredient_service.add_to_inventory(user_id, "Mint")
-    assert set(ingredient_service.get_inventory(user_id)) == {"Rum", "Mint"}
-    
-    # Remove item
-    ingredient_service.remove_from_inventory(user_id, "Rum")
-    assert ingredient_service.get_inventory(user_id) == ["Mint"]
-    
-    # Update full inventory
-    ingredient_service.update_inventory(user_id, ["Gin", "Tonic"])
-    assert set(ingredient_service.get_inventory(user_id)) == {"Gin", "Tonic"}
-    
-    # Clear inventory
-    ingredient_service.clear_inventory(user_id)
-    assert ingredient_service.get_inventory(user_id) == []
-
 def test_get_all_ingredients():
     # Create a test ingredient service with a custom local ingredient loader
     mock_local = [
