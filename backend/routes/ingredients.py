@@ -13,6 +13,7 @@ class InventoryUpdate(BaseModel):
     user_id: str
     ingredients: List[str]
 
+@router.get("", include_in_schema=False)
 @router.get("/")
 async def get_all_ingredients():
     try:

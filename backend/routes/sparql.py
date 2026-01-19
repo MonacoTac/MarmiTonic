@@ -4,6 +4,7 @@ from ..models.sparql_query import SparqlQuery
 
 router = APIRouter()
 
+@router.post("", include_in_schema=False)
 @router.post("/")
 async def execute_sparql_query(query: SparqlQuery):
     service = SparqlService()
