@@ -178,7 +178,7 @@ class D3DisjointForceGraph {
         const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
         
         this.nodeElements
-            .attr('fill', d => colorScale(components.find(c => c.includes(d.id))?.index || 0));
+            .attr('fill', d => colorScale(components.find(c => c.nodes.includes(d.id))?.index || 0));
     }
 
     findConnectedComponents() {
