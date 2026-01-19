@@ -192,10 +192,7 @@
             if (header) {
                 // Use the title from the backend, or fallback to generic title
                 const title = cluster.title || `Collection ${cluster.cluster_id + 1}`;
-                // Replace placeholder with actual title
-                header.innerHTML = title;
-                header.classList.remove('loading');
-                header.classList.add('loaded');
+                header.textContent = title;
             }
             
             // Render cocktails

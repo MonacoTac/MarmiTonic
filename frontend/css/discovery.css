@@ -478,34 +478,6 @@
     }
 }
 
-/* Loading State */
-.cluster-title.loading {
-    color: var(--text-dark);
-    opacity: 0.6;
-    transition: all 0.3s ease;
-}
-
-.cluster-title.loading .placeholder-text {
-    margin-right: 8px;
-}
-
-.cluster-title.loading .loading-indicator {
-    display: inline-block;
-    animation: spin 1s linear infinite;
-    color: var(--accent-gold);
-}
-
-.cluster-title.loaded {
-    color: var(--primary-color);
-    opacity: 1;
-    transition: all 0.3s ease;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
 /* Empty State */
 .empty-recent-state {
     background: rgba(255, 255, 255, 0.5);
