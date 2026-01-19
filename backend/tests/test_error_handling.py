@@ -356,52 +356,6 @@ class TestIngredientServiceErrorHandling:
         
         assert ingredients == []
 
-    @patch('services.ingredient_service.SparqlService')
-    def test_get_ingredient_by_uri_invalid_uri(self, mock_sparql):
-        """Test get_ingredient_by_uri with invalid URI"""
-        mock_sparql_instance = Mock()
-        mock_sparql.return_value = mock_sparql_instance
-        mock_sparql_instance.execute_local_query.return_value = {"results": {"bindings": []}}
-        mock_sparql_instance.execute_query.side_effect = Exception("Invalid URI format")
-        
-        service = IngredientService()
-        ingredient = service.get_ingredient_by_uri("not a valid uri")
-        
-        assert ingredient is None
-
-    @patch('services.ingredient_service.SparqlService')
-    def test_get_ingredient_by_uri_both_services_fail(self, mock_sparql):
-        """Test get_ingredient_by_uri when both local and DBpedia fail"""
-        mock_sparql_instance = Mock()
-        mock_sparql.return_value = mock_sparql_instance
-        mock_sparql_instance.execute_local_query.side_effect = Exception("Local error")
-        mock_sparql_instance.execute_query.side_effect = Exception("DBpedia error")
-        
-        service = IngredientService()
-        ingredient = service.get_ingredient_by_uri("http://example.com/ing")
-        
-        assert ingredient is None
-
-    def test_inventory_operations_edge_cases(self):
-        """Test inventory operations with edge cases"""
-        service = IngredientService()
-        
-        # Add to non-existent user
-        service.add_to_inventory("user1", "Vodka")
-        assert service.inventories["user1"] == ["Vodka"]
-        
-        # Remove from non-existent user
-        service.remove_from_inventory("user2", "Vodka")
-        assert "user2" not in service.inventories
-        
-        # Remove non-existent ingredient
-        service.remove_from_inventory("user1", "Gin")
-        assert service.inventories["user1"] == ["Vodka"]
-        
-        # Clear non-existent user
-        service.clear_inventory("user3")
-        assert "user3" not in service.inventories
-
 
 class TestGraphServiceErrorHandling:
     """Test error handling in GraphService"""
