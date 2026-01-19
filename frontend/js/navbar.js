@@ -50,6 +50,15 @@
         
         searchResultsDropdown = createDropdown();
         
+        searchResultsDropdown.addEventListener('mouseenter', () => {
+            searchResultsDropdown.classList.add('dropdown-hovered');
+        });
+        
+        searchResultsDropdown.addEventListener('mouseleave', () => {
+            searchResultsDropdown.classList.remove('dropdown-hovered');
+            searchResultsDropdown.style.display = 'none';
+        });
+        
         // Gérer les changements d'entrée
         searchInput.addEventListener('input', async (e) => {
             clearTimeout(searchTimeout);
@@ -74,11 +83,12 @@
             }, 300);
         });
         
-        // Fermer le dropdown au blur
         searchInput.addEventListener('blur', () => {
             setTimeout(() => {
-                searchResultsDropdown.style.display = 'none';
-            }, 200);
+                if (!searchResultsDropdown.classList.contains('dropdown-hovered')) {
+                    searchResultsDropdown.style.display = 'none';
+                }
+            }, 300);
         });
         
         // Focus to show results again
@@ -201,9 +211,9 @@
         
         dropdown.style.display = 'block';
         
-        // Ajouter les gestionnaires de clic aux résultats
         dropdown.querySelectorAll('.search-result-item').forEach(item => {
-            item.addEventListener('click', (e) => {
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault(); // Empêcher le blur de l'input
                 const index = parseInt(item.dataset.index);
                 const selectedCocktail = limitedResults[index];
                 navigateToCocktailDetail(selectedCocktail);
@@ -239,11 +249,9 @@
             
             if (navbar && menuNoNavbar) {
                 if (prevScrollPos > currentScrollPos || currentScrollPos < 50) {
-                    // Scrolling up or at top - show navbar
                     navbar.classList.remove('hide');
                     menuNoNavbar.style.display = 'none';
                 } else {
-                    // Scrolling down - hide navbar, show menu button
                     navbar.classList.add('hide');
                     menuNoNavbar.style.display = 'flex';
                 }
