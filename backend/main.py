@@ -28,10 +28,10 @@ async def lifespan(app: FastAPI):
     
     cache_start = time.time()
     cocktails = get_all_cocktails()
-    print(f"   ✅ Loaded {len(cocktails)} cocktails")
+    print(f"   Loaded {len(cocktails)} cocktails")
     
     ingredients = get_all_ingredients()
-    print(f"   ✅ Loaded {len(ingredients)} ingredients")
+    print(f"   Loaded {len(ingredients)} ingredients")
     
     cache_time = time.time() - cache_start
     total_time = time.time() - start_time
