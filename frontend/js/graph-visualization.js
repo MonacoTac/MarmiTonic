@@ -505,9 +505,6 @@ class GraphVisualizationPage {
             
             this.ginModeActive = false;
             console.log('HORRIBLE GIN MODE deactivated');
-            
-            // Recharger la page pour être sûr de tout restaurer
-            window.location.reload();
         }, 10000);
     }
 }
