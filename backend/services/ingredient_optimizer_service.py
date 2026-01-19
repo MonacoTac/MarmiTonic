@@ -10,7 +10,7 @@ class IngredientOptimizerService:
     def find_optimal_ingredients(self, N: int) -> Dict[str, any]:
         """
         Find the optimal set of N ingredients that can produce the largest number of cocktails.
-        Uses a greedy algorithm to iteratively select ingredients that add the most new cocktails.
+        Uses a heuristic algorithm to select ingredients that complete the most cocktail recipes.
         
         Args:
             N (int): Number of ingredients to select
@@ -18,46 +18,81 @@ class IngredientOptimizerService:
         Returns:
             Dict[str, any]: Dictionary containing selected ingredients and cocktail count
         """
-        # Step 1: Get all cocktails and their ingredients
-        cocktails = self.cocktail_service.get_all_cocktails()
+        # Step 1: Get all cocktails and filter those that require too many ingredients
+        all_cocktails = self.cocktail_service.get_all_cocktails()
         
-        # Step 2: Build ingredient frequency map
-        ingredient_freq = {}
-        for cocktail in cocktails:
-            if cocktail.parsed_ingredients:
-                for ingredient in cocktail.parsed_ingredients:
-                    ingredient_freq[ingredient] = ingredient_freq.get(ingredient, 0) + 1
+        # Pre-process cocktails to sets for faster lookup
+        # Only consider cocktails that have ingredients and can possibly be made with N ingredients
+        valid_cocktails = []
+        possible_ingredients = set()
         
-        # Step 3: Greedy selection
-        selected_ingredients = []
-        covered_cocktails = set()
+        for c in all_cocktails:
+            if c.parsed_ingredients and len(c.parsed_ingredients) <= N:
+                ing_set = set(c.parsed_ingredients)
+                valid_cocktails.append({
+                    'cocktail': c,
+                    'ingredients': ing_set
+                })
+                possible_ingredients.update(ing_set)
         
+        selected_ingredients = set()
+        
+        # Step 2: Iteratively select N ingredients
         for _ in range(N):
             best_ingredient = None
-            best_count = 0
+            best_score = -1.0
             
-            for ingredient, freq in ingredient_freq.items():
-                if ingredient in selected_ingredients:
-                    continue
+            # Identify candidates (ingredients not yet selected)
+            candidates = possible_ingredients - selected_ingredients
+            
+            if not candidates:
+                break
                 
-                # Calculate how many new cocktails this ingredient would add
-                new_cocktails = 0
-                for cocktail in cocktails:
-                    if cocktail.name not in covered_cocktails and cocktail.parsed_ingredients and ingredient in cocktail.parsed_ingredients:
-                        new_cocktails += 1
+            for ingredient in candidates:
+                score = 0.0
                 
-                if new_cocktails > best_count:
-                    best_count = new_cocktails
+                # Calculate score based on how much this ingredient helps complete cocktails
+                for vc in valid_cocktails:
+                    required = vc['ingredients']
+                    if ingredient not in required:
+                        continue
+                        
+                    # Calculate missing ingredients if we were to add this one
+                    missing_count = sum(1 for i in required if i not in selected_ingredients)
+                    
+                    # If this ingredient is one of the missing ones, it reduces the count by 1
+                    # We want to know the *current* missing count (including this ingredient)
+                    # The loop above calculates missing count *before* adding this ingredient.
+                    # Wait, careful. "if i not in selected_ingredients".
+                    # Since 'ingredient' is from 'candidates' (not selected), it IS in the missing count.
+                    
+                    # We want to incentivize completing cocktails.
+                    # If missing_count == 1: picking this ingredient -> Complete! Score High.
+                    
+                    if missing_count == 1:
+                        score += 100.0
+                    else:
+                        # missing_count > 1. 
+                        # We reward progress. smaller missing_count is better.
+                        score += 1.0 / missing_count
+                
+                if score > best_score:
+                    best_score = score
                     best_ingredient = ingredient
             
             if best_ingredient:
-                selected_ingredients.append(best_ingredient)
-                # Update covered cocktails
-                for cocktail in cocktails:
-                    if cocktail.parsed_ingredients and best_ingredient in cocktail.parsed_ingredients:
-                        covered_cocktails.add(cocktail.name)
+                selected_ingredients.add(best_ingredient)
+        
+        # Step 3: Calculate final results
+        completed_count = 0
+        possible_cocktails = []
+        for vc in valid_cocktails:
+            if vc['ingredients'].issubset(selected_ingredients):
+                completed_count += 1
+                possible_cocktails.append(vc['cocktail'])
         
         return {
-            "ingredients": selected_ingredients,
-            "cocktail_count": len(covered_cocktails)
+            "ingredients": list(selected_ingredients),
+            "cocktail_count": completed_count,
+            "cocktails": possible_cocktails
         }

@@ -222,6 +222,82 @@
     }
 }
 
+/* Possible Cocktails Grid */
+.possible-cocktails-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(21, 71, 38, 0.1);
+}
+
+.possible-cocktails-section h3 {
+    font-family: 'Beckan', 'Inter', sans-serif;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.cocktails-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* Ensure cocktail cards from discovery.css take full width of grid cell */
+.cocktail-card {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: unset !important;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 16px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(21, 71, 38, 0.1);
+}
+
+.cocktail-card:hover {
+    box-shadow: 0 12px 36px rgba(21, 71, 38, 0.18);
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(212, 175, 55, 0.2);
+}
+
+.cocktail-card-image {
+    width: 100%;
+    aspect-ratio: 1/1;
+    height: auto;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.cocktail-card-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cocktail-card h3 {
+    font-size: 1.1rem;
+    margin: 0;
+    color: var(--primary-color);
+}
+
+.no-results {
+    text-align: center;
+    color: var(--text-dark);
+    font-style: italic;
+    grid-column: 1 / -1;
+    padding: 2rem;
+}
+
 /* Accessibility */
 *:focus-visible {
     outline: 2px solid var(--accent-gold);
