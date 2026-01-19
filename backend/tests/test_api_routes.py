@@ -389,10 +389,11 @@ class TestRootEndpoint:
         """Test GET /"""
         response = client.get("/")
         
+        # Now serving frontend, so we expect HTML or 404 if frontend not found
+        # But assuming frontend dir exists as per mount logic:
         assert response.status_code == 200
-        data = response.json()
-        assert "message" in data
-        assert "MarmiTonic" in data["message"]
+        # Should be HTML
+        assert "text/html" in response.headers["content-type"]
 
 
 class TestInvalidRoutes:

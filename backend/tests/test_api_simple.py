@@ -22,7 +22,8 @@ class TestBasicEndpoints:
         """Test GET /"""
         response = client.get("/")
         assert response.status_code == 200
-        assert "message" in response.json()
+        # Now serving frontend, so we expect HTML
+        assert "text/html" in response.headers["content-type"]
 
     def test_cocktails_endpoint_exists(self):
         """Test GET /cocktails/ endpoint exists"""
