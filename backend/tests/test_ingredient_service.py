@@ -26,20 +26,15 @@ class TestIngredientService:
         assert hasattr(ingredient_service, 'sparql_service')
 
     def test_get_ingredient_by_id_success(self, ingredient_service):
-        mock_data = {
-            "results": {
-                "bindings": [
-                    {
-                        "id": {"value": "http://example.com/ingredient1"},
-                        "name": {"value": "Gin"},
-                        "category": {"value": "Base Spirit"},
-                        "description": {"value": "A distilled alcoholic drink"}
-                    }
-                ]
+        mock_data = [
+            {
+                "name": {"value": "Gin"},
+                "category": {"value": "Base Spirit"},
+                "description": {"value": "A distilled alcoholic drink"}
             }
-        }
+        ]
 
-        ingredient_service.sparql_service.query_local_data.return_value = mock_data
+        ingredient_service.sparql_service.execute_query = Mock(return_value=mock_data)
 
         result = ingredient_service.get_ingredient_by_id("http://example.com/ingredient1")
 

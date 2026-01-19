@@ -20,7 +20,7 @@ def test_llm_service_caching():
     print(f"nl2sparql second call: {result2}")
     
     assert result1 == result2
-    print("✅ nl2sparql caching working correctly")
+    print("nl2sparql caching working correctly")
     
     # Test example method caching
     prompt = "What is the capital of France?"
@@ -31,7 +31,7 @@ def test_llm_service_caching():
     print(f"example second call: {result2}")
     
     assert result1 == result2
-    print("✅ example method caching working correctly")
+    print("example method caching working correctly")
 
 
 def test_similarity_service_caching():
@@ -60,7 +60,7 @@ def test_similarity_service_caching():
     print(f"Second cluster title: {title2}")
     
     assert title1 == title2
-    print("✅ Cluster title generation caching working correctly")
+    print("Cluster title generation caching working correctly")
 
 
 def test_cache_expiration():
@@ -73,16 +73,26 @@ def test_cache_expiration():
     result1 = llm_service.example(prompt)
     print(f"First call result: {result1}")
     
+    # Verify cache has the entry
+    cache_key = llm_service._get_cache_key(prompt, "example")
+    cached = llm_service.cache.get(cache_key)
+    assert cached is not None, "Entry should be in cache"
+    
     # Wait for cache to expire
     time.sleep(3)
+    
+    # Cache should be expired now
+    cached_after_expiry = llm_service.cache.get(cache_key)
+    assert cached_after_expiry is None, "Entry should be expired"
     
     # This should trigger a new API call
     result2 = llm_service.example(prompt)
     print(f"Call after expiration: {result2}")
     
-    # Should be the same result (API should return same response)
-    assert result1 == result2
-    print("✅ Cache expiration working correctly")
+    # Both should have some content (don't compare exact text)
+    assert result1 is not None and len(result1) > 0
+    assert result2 is not None and len(result2) > 0
+    print("Cache expiration working correctly")
 
 
 if __name__ == "__main__":
@@ -90,8 +100,8 @@ if __name__ == "__main__":
         test_llm_service_caching()
         test_similarity_service_caching()
         test_cache_expiration()
-        print("\n✅ All caching tests passed!")
+        print("\nAll caching tests passed!")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nError: {e}")
         import traceback
         print(traceback.format_exc())

@@ -1,11 +1,6 @@
-import os
-import requests
-from SPARQLWrapper import SPARQLWrapper, JSON
 from rdflib import Graph
 from rdflib.term import URIRef
 from typing import Optional, Union
-import sys
-from pathlib import Path
 
 # Importer le parser IBA
 from data.ttl_parser import IBADataParser
@@ -13,8 +8,7 @@ from utils.graph_loader import get_shared_graph
 
 class SparqlService:
     def __init__(self, local_graph: Optional[Union[str, Graph]] = None):
-        self.endpoint = "https://dbpedia.org/sparql"
-        self.local_endpoint = "http://localhost:3030/marmitonic"
+        # ONLY LOCAL GRAPH - NO EXTERNAL DBPEDIA QUERIES ALLOWED
         self.local_graph_path = "data.ttl"
 
         # If local_graph is a Graph object, use it directly
@@ -34,33 +28,12 @@ class SparqlService:
             self.parser = None
 
     def execute_query(self, query: str):
-        """Execute SPARQL query on DBpedia"""
-        sparql = SPARQLWrapper("https://dbpedia.org/sparql")
-        sparql.setQuery(query)
-        sparql.setReturnFormat(JSON)
-        try:
-            results = sparql.query().convert()
-            return results
-        except Exception as e:
-            print(f"Error executing SPARQL query: {e}")
-            # Fallback to requests if SPARQLWrapper fails
-            params = {
-                'query': query,
-                'format': 'application/sparql-results+json'
-            }
-            headers = {
-                'Accept': 'application/sparql-results+json'
-            }
-            try:
-                response = requests.get("https://dbpedia.org/sparql", params=params, headers=headers, timeout=30)
-                if response.status_code >= 400:
-                    return None
-                return response.json()
-            except:
-                return None
+        """Execute SPARQL query - ONLY ON LOCAL GRAPH"""
+        # All queries go to local graph - no external access
+        return self.execute_local_query(query)
 
     def execute_local_query(self, query: str):
-        """Execute SPARQL query on local RDF graph"""
+        """Execute SPARQL query on local RDF graph - returns direct Python list"""
         print(f"DEBUG: execute_local_query called")
         if self.local_graph is None:
             print("DEBUG: Local graph not loaded")
@@ -71,62 +44,22 @@ class SparqlService:
             # Execute query on local graph
             result = self.local_graph.query(query)
 
-            # Convert to SPARQL results JSON format
-            bindings = []
+            # Convert directly to Python list of dicts
+            rows = []
             for row in result:
-                binding = {}
+                row_dict = {}
                 for var, value in zip(result.vars, row):
                     if value is not None:
-                        if hasattr(value, 'n3'):
-                            binding[str(var)] = {"value": str(value), "type": "uri" if isinstance(value, URIRef) else "literal"}
-                        else:
-                            binding[str(var)] = {"value": str(value), "type": "literal"}
+                        row_dict[str(var)] = {
+                            "value": str(value),
+                            "type": "uri" if isinstance(value, URIRef) else "literal"
+                        }
                     else:
-                        binding[str(var)] = {"value": None}
-                bindings.append(binding)
+                        row_dict[str(var)] = {"value": None, "type": "literal"}
+                rows.append(row_dict)
 
-            print(f"DEBUG: Query executed successfully, {len(bindings)} results")
-            return {
-                "head": {"vars": [str(var) for var in result.vars]},
-                "results": {"bindings": bindings}
-            }
+            print(f"DEBUG: Query executed successfully, {len(rows)} results")
+            return rows
         except Exception as e:
             print(f"DEBUG: Error executing local SPARQL query: {e}")
             return None
-
-    def query_local_data(self, query_type: str, uri: str = None, additional_properties: list = None):
-        """Query local data with optional parameters"""
-        prefixes = """
-            PREFIX : <http://dbpedia.org/resource/>
-            PREFIX dbo: <http://dbpedia.org/ontology/>
-            PREFIX dbp: <http://dbpedia.org/property/>
-            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-        """
-        
-        if query_type == "cocktails":
-            query = prefixes + """
-            SELECT ?cocktail WHERE {
-                ?cocktail a :Cocktail .
-            }
-            """
-        elif query_type == "cocktail":
-            query = prefixes + f"""
-            SELECT ?property ?value WHERE {{
-                <{uri}> ?property ?value .
-            }}
-            """
-        elif query_type == "ingredients":
-            query = prefixes + """
-            SELECT ?ingredient WHERE {
-                ?ingredient a :Ingredient .
-            }
-            """
-        else:
-            query = prefixes + """
-            SELECT ?s ?p ?o WHERE {
-                ?s ?p ?o .
-            }
-            """
-        
-        return self.execute_local_query(query)

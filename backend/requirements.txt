@@ -6,7 +6,7 @@ matplotlib
 networkx
 pydantic
 requests
-SPARQLWrapper
+rdflib
 uvicorn
 openai
 python-dotenv

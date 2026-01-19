@@ -56,17 +56,13 @@ def test_get_ingredient_by_id_local(ingredient_service):
 
 def test_search_ingredients(ingredient_service):
     # Mock sparql_service.execute_query
-    mock_results = {
-        "results": {
-            "bindings": [
-                {
-                    "id": {"value": "http://test/vodka"},
-                    "name": {"value": "Vodka"},
-                    "category": {"value": "Spirit"}
-                }
-            ]
+    mock_results = [
+        {
+            "id": {"value": "http://test/vodka"},
+            "name": {"value": "Vodka"},
+            "category": {"value": "Spirit"}
         }
-    }
+    ]
     ingredient_service.sparql_service.execute_query.return_value = mock_results
     
     results = ingredient_service.search_ingredients("vodka")

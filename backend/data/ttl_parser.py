@@ -59,7 +59,7 @@ class IBADataParser:
         self._cocktails_cache = None     # Cache pour les cocktails
         self._load_data()
         self._initialized = True
-        print(f"✅ IBADataParser initialized with {len(self.graph)} triples")
+        print(f"IBADataParser initialized with {len(self.graph)} triples")
     
     @staticmethod
     def generate_slug(name: str) -> str:
@@ -82,12 +82,12 @@ class IBADataParser:
             start_time = time.time()
             self.graph.parse(str(file_path), format="turtle", encoding="utf-8")
             load_time = time.time() - start_time
-            print(f"✅ Loaded {len(self.graph)} triples in {load_time:.3f}s")
+            print(f"Loaded {len(self.graph)} triples in {load_time:.3f}s")
         except FileNotFoundError:
-            print(f"❌ File not found: {file_path}")
+            print(f"File not found: {file_path}")
             raise
         except Exception as e:
-            print(f"❌ Error loading file: {e}")
+            print(f"Error loading file: {e}")
             raise
     
     def _parse_ingredients_text(self, ingredients_text: str) -> List[str]:
